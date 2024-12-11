@@ -1,0 +1,58 @@
+.slider-thumb::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+
+.slider-thumb::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+
+.slider-thumb::-ms-thumb {
+  width: 16px;
+  height: 16px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+
+.btn {
+  background-color: #4a5568; /* bg-gray-700 */
+  padding: 0.75rem; /* p-3 */
+  border-radius: 9999px; /* rounded-full */
+  color: #ffffff; /* text-white */
+  &:hover {
+    background-color: #2d3748; /* hover:bg-gray-600 */
+  }
+  &:focus {
+    outline: none; /* focus:outline-none */
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
