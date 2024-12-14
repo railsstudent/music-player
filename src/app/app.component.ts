@@ -22,6 +22,10 @@ interface Track {
 })
 export class AppComponent implements OnInit {
   @ViewChild('trackListContainer') trackListContainer!: ElementRef;
+  volume = signal(100);
+  isMuted = signal(false);
+  isShuffle = signal(false);
+  isRepeat = signal(false);
   tracks: Track[] = [
     {
       title: 'Serenity',
@@ -72,7 +76,7 @@ export class AppComponent implements OnInit {
       title: 'Reggae Vibes',
       artist: 'Island Rhythms',
       url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3',
-    }
+    },
   ];
 
   currentTrackIndex = signal(0);
@@ -96,6 +100,34 @@ export class AppComponent implements OnInit {
       this.error.set('Unable to load audio. Please check the audio source.');
       this.isPlaying.set(false);
     });
+    if (this.volume() !== null) {
+      this.setVolume(this.volume());
+    }
+  }
+
+  handleVolumeChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const value = parseFloat(input.value);
+    this.volume.set(value);
+    this.setVolume(value);
+  }
+
+  increaseVolume() {
+    const newVolume = Math.min((this.volume() || 50) + 10, 100);
+    this.volume.set(newVolume);
+    this.setVolume(newVolume);
+  }
+
+  decreaseVolume() {
+    const newVolume = Math.max((this.volume() || 50) - 10, 0);
+    this.volume.set(newVolume);
+    this.setVolume(newVolume);
+  }
+
+  setVolume(value: number) {
+    if (this.audio) {
+      this.audio.volume = value / 100;
+    }
   }
 
   handlePlayPause() {
