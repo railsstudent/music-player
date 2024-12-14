@@ -6,6 +6,7 @@ import {
   computed,
   ViewChild,
   ElementRef,
+  HostListener,
 } from '@angular/core';
 
 interface Track {
@@ -23,9 +24,6 @@ interface Track {
 export class AppComponent implements OnInit {
   @ViewChild('trackListContainer') trackListContainer!: ElementRef;
   volume = signal(100);
-  isMuted = signal(false);
-  isShuffle = signal(false);
-  isRepeat = signal(false);
   tracks: Track[] = [
     {
       title: 'Serenity',
@@ -87,6 +85,32 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
     this.loadTrack();
+    window.addEventListener('keydown', this.handleKeydown.bind(this));
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('keydown', this.handleKeydown.bind(this));
+  }
+
+  handleKeydown(event: KeyboardEvent) {
+    switch (event.key) {
+      case ' ':
+        event.preventDefault();
+        this.handlePlayPause();
+        break;
+      case 'ArrowRight':
+        this.handleNext();
+        break;
+      case 'ArrowLeft':
+        this.handlePrevious();
+        break;
+      case 'ArrowUp':
+        this.increaseVolume();
+        break;
+      case 'ArrowDown':
+        this.decreaseVolume();
+        break;
+    }
   }
 
   loadTrack() {
