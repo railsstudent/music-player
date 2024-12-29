@@ -6,7 +6,6 @@ import {
   computed,
   ViewChild,
   ElementRef,
-  HostListener,
 } from '@angular/core';
 
 interface Track {
@@ -81,6 +80,10 @@ export class AppComponent implements OnInit {
   isPlaying = signal(false);
   progress = signal(0);
   error = signal<string | null>(null);
+  searchQuery = signal('');
+  isMuted = signal(false);
+  currentTime = signal(0);
+  duration = signal(0);
   private audio: HTMLAudioElement | null = null;
 
   ngOnInit() {
@@ -109,6 +112,12 @@ export class AppComponent implements OnInit {
         break;
       case 'ArrowDown':
         this.decreaseVolume();
+        break;
+      case 'm':
+        this.toggleMute();
+        break;
+      case 's':
+        this.handleSearch(event);
         break;
     }
   }
@@ -214,11 +223,31 @@ export class AppComponent implements OnInit {
     }
   }
 
+  handleSearch(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.searchQuery.set(input.value);
+  }
+
+  toggleMute() {
+    this.isMuted.set(!this.isMuted());
+    if (this.audio) {
+      this.audio.muted = this.isMuted();
+    }
+  }
+
   updateProgress() {
     if (this.audio) {
       const duration = this.audio.duration || 1;
       const currentTime = this.audio.currentTime;
       this.progress.set((currentTime / duration) * 100);
+      this.currentTime.set(currentTime);
+      this.duration.set(duration);
     }
+  }
+
+  formatTime(seconds: number): string {
+    const minutes = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
   }
 }
