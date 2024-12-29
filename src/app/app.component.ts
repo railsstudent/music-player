@@ -84,6 +84,11 @@ export class AppComponent implements OnInit {
   isMuted = signal(false);
   currentTime = signal(0);
   duration = signal(0);
+  filteredTracks = computed(() =>
+    this.tracks.filter((track) =>
+      track.title.toLowerCase().includes(this.searchQuery().toLowerCase())
+    )
+  );
   private audio: HTMLAudioElement | null = null;
 
   ngOnInit() {

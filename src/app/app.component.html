@@ -1,4 +1,4 @@
-<div class="w-full flex flex-col items-center justify-center p-6 bg-gray-800 text-white">
+<div class="w-full h-screen flex flex-col items-center justify-center p-6 bg-gray-800 text-white">
   <header class="w-full max-w-md mb-8">
     <h1 class="text-3xl font-bold text-center">Music Player</h1>
   </header>
@@ -48,15 +48,14 @@
     </button>
   </div>
 
-  <!-- Current Track Duration -->
-  <div class="text-center mb-4 w-full max-w-md">
-    <span>{{ formatTime(currentTime()) }} / {{ formatTime(duration()) }}</span>
-  </div>
-
-  <!-- Custom Slider -->
-  <div class="relative mb-4 w-full max-w-md">
-    <input type="range" min="0" max="100" [value]="progress()" (input)="handleSeek($event)"
-      class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider-thumb" />
+  <!-- Current Track Duration and Custom Slider -->
+  <div class="flex items-center justify-between mb-4 w-full max-w-md">
+    <span class="text-sm text-gray-400">{{ formatTime(currentTime()) }}</span>
+    <div class="relative flex-1 mx-2">
+      <input type="range" min="0" max="100" [value]="progress()" (input)="handleSeek($event)"
+        class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider-thumb" />
+    </div>
+    <span class="text-sm text-gray-400">{{ formatTime(duration()) }}</span>
   </div>
 
   <!-- Volume Control -->
@@ -72,7 +71,7 @@
   <h3 class="text-xl font-semibold mb-2">Track List</h3>
   <div class="h-[200px] w-full max-w-md rounded-md border border-gray-700 p-4 overflow-y-auto custom-scrollbar"
     #trackListContainer>
-    @for (track of tracks; track $index) {
+    @for (track of filteredTracks(); track $index) {
     <div class="p-2 cursor-pointer hover:bg-gray-700 rounded-md"
       [ngClass]="{ 'bg-gray-700': $index === currentTrackIndex() }" (click)="handleTrackSelect($index)">
       <p class="font-medium">{{ track.title }}</p>
