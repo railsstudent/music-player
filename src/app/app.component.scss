@@ -1,3 +1,6 @@
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
 .slider-thumb::-webkit-slider-thumb {
   appearance: none;
   width: 16px;
