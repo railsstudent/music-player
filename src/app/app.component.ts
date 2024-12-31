@@ -19,10 +19,11 @@ import { Track } from './interfaces/track.interface';
 import { TRACK_DATA } from './track-data';
 import { WINDOW_TOKEN } from './injection-tokens/window.token';
 import { VolumeControlComponent } from './music-player/volume-control/volume-control.component';
+import { TrackInfoComponent } from './music-player/track-info/track-info.component';
 
 @Component({
   selector: 'app-root',
-  imports: [NgClass, VolumeControlComponent],
+  imports: [NgClass, VolumeControlComponent, TrackInfoComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,6 +47,10 @@ export class AppComponent implements OnInit, OnDestroy {
     )
   );
   numTracks = computed(() => this.filteredTracks().length);
+  currentTrack = computed(() => {
+    const index = this.currentTrackIndex();
+    return index < 0 ? undefined : this.filteredTracks()[index];
+  });
 
   audio = viewChild.required<ElementRef<HTMLAudioElement>>('a');
   audioNativeElement = computed(() => this.audio().nativeElement);
@@ -149,7 +154,10 @@ export class AppComponent implements OnInit, OnDestroy {
         this.isPlaying.set(false);
       }
 
-      this.audioNativeElement().src = this.filteredTracks()[this.currentTrackIndex()].url;
+      const track = this.currentTrack();
+      if (track) {
+        this.audioNativeElement().src = track.url;
+      }
     } catch {
       if (!this.audioNativeElement().paused) {
         this.audioNativeElement().pause();
