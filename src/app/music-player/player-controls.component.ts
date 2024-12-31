@@ -8,12 +8,10 @@ import { Track } from './interfaces/track.interface';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlayerControlsComponent {
-  tracks = input.required<Track[]>();
+  numTracks = input.required<number>();
   currentTrackIndex = model(0);
   isPlaying = model(false);
   isMuted = model(false);
-
-  numTracks = computed(() => this.tracks().length);
 
   handlePrevious() {
     this.currentTrackIndex.update((prev) => (prev - 1 + this.numTracks()) % this.numTracks());

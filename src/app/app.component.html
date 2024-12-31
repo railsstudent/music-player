@@ -12,7 +12,7 @@
   <app-track-info class="w-full max-w-md" [track]="currentTrack()" />
 
   <!-- Player Controls -->
-  <app-player-controls class="w-full max-w-md" [tracks]="filteredTracks()" 
+  <app-player-controls class="w-full max-w-md" [numTracks]="filteredTrackLength()" 
     [(isPlaying)]="isPlaying" [(isMuted)]="isMuted" [(currentTrackIndex)]="currentTrackIndex" />
 
   <!-- Current Track Duration and Custom Slider -->
