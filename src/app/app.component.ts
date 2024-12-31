@@ -157,22 +157,6 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
-  handleVolumeChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const value = parseFloat(input.value);
-    this.volume.set(value);
-  }
-
-  increaseVolume() {
-    const newVolume = Math.min((this.volume() || 50) + 10, 100);
-    this.volume.set(newVolume);
-  }
-
-  decreaseVolume() {
-    const newVolume = Math.max((this.volume() || 50) - 10, 0);
-    this.volume.set(newVolume);
-  }
-
   handlePlayPause() {
     if (this.isPlaying()) {
       this.audioNativeElement().pause();
