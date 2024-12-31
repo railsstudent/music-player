@@ -8,6 +8,7 @@ import {
   ElementRef,
   ChangeDetectionStrategy,
 } from '@angular/core';
+import { MusicPlayerFilterBarComponent } from './music-player/music-player-filter-bar.component';
 
 interface Track {
   title: string;
@@ -17,7 +18,7 @@ interface Track {
 
 @Component({
   selector: 'app-root',
-  imports: [NgClass],
+  imports: [NgClass, MusicPlayerFilterBarComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -16,10 +16,7 @@
   }
 
   <!-- Search Bar -->
-  <div class="relative mb-4 w-full max-w-md">
-    <input type="text" placeholder="Search tracks..." (input)="handleSearch($event)"
-      class="w-full p-2 rounded bg-gray-700 text-white" />
-  </div>
+  <app-music-player-filter-bar class="relative mb-4 w-full max-w-md" [(searchQuery)]="searchQuery"  />
 
   <!-- Current Track Info -->
   <div class="text-center mb-4 w-full max-w-md">
@@ -71,7 +68,7 @@
   <h3 class="text-xl font-semibold mb-2">Track List</h3>
   <div class="h-[200px] w-full max-w-md rounded-md border border-gray-700 p-4 overflow-y-auto custom-scrollbar"
     #trackListContainer>
-    @for (track of filteredTracks(); track $index) {
+    @for (track of filteredTracks(); track track.title) {
     <div class="p-2 cursor-pointer hover:bg-gray-700 rounded-md"
       [ngClass]="{ 'bg-gray-700': $index === currentTrackIndex() }" (click)="handleTrackSelect($index)">
       <p class="font-medium">{{ track.title }}</p>
