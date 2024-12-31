@@ -1,33 +1,33 @@
 import { NgClass } from '@angular/common';
 import {
-  Component,
-  OnInit,
-  signal,
-  computed,
-  ViewChild,
-  ElementRef,
   ChangeDetectionStrategy,
-  viewChild,
+  Component,
+  computed,
   DestroyRef,
+  effect,
+  ElementRef,
   inject,
   OnDestroy,
-  effect,
+  OnInit,
+  signal,
+  viewChild
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, fromEvent, map } from 'rxjs';
-import { Track } from './interfaces/track.interface';
-import { TRACK_DATA } from './track-data';
-import { WINDOW_TOKEN } from './injection-tokens/window.token';
-import { VolumeControlComponent } from './music-player/volume-control/volume-control.component';
-import { TrackInfoComponent } from './music-player/track-info/track-info.component';
 import { ErrorComponent } from './error/error.component';
+import { WINDOW_TOKEN } from './injection-tokens/window.token';
+import { Track } from './interfaces/track.interface';
+import { TrackDurationComponent } from './music-player/track-duration/track-duration.component';
 import { TrackFilterComponent } from './music-player/track-filter/track-filter.component';
+import { TrackInfoComponent } from './music-player/track-info/track-info.component';
 import { TrackListComponent } from './music-player/track-list/track-list.component';
+import { VolumeControlComponent } from './music-player/volume-control/volume-control.component';
+import { TRACK_DATA } from './track-data';
 
 @Component({
   selector: 'app-root',
   imports: [NgClass, VolumeControlComponent, TrackInfoComponent, ErrorComponent, TrackFilterComponent,
-    TrackListComponent
+    TrackListComponent, TrackDurationComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
@@ -39,12 +39,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
   currentTrackIndex = signal(0);
   isPlaying = signal(false);
-  progress = signal(0);
   error = signal<string | null>(null);
   searchQuery = signal('');
   isMuted = signal(false);
-  currentTime = signal(0);
-  duration = signal(0);
   filteredTracks = computed(() =>
     this.tracks().filter((track) =>
       track.title.toLowerCase().includes(this.searchQuery().toLowerCase())
@@ -65,6 +62,12 @@ export class AppComponent implements OnInit, OnDestroy {
   numLoaded = signal(0);
   audios: HTMLAudioElement[] = [];
   window = inject(WINDOW_TOKEN);
+
+  trackDuration = signal({
+    duration: 0,
+    currentTime: 0,
+    progress: 0,
+  });
 
   constructor() {
     if (this.window) {
@@ -204,10 +207,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.currentTrackIndex.update((prev) => (prev - 1 + this.numTracks()) % this.numTracks());
   }
 
-  handleSeek(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const value = parseFloat(input.value);
-    this.progress.set(value);
+  handleSeek(value: number) {
+    this.trackDuration.update((prev) => ({ ...prev, progress: value }));
 
     const newTime = (value / 100) * this.audioNativeElement().duration;
     this.audioNativeElement().currentTime = newTime;
@@ -225,14 +226,10 @@ export class AppComponent implements OnInit, OnDestroy {
   updateProgress() {
     const duration = this.audioNativeElement().duration || 1;
     const currentTime = this.audioNativeElement().currentTime;
-    this.progress.set((currentTime / duration) * 100);
-    this.currentTime.set(currentTime);
-    this.duration.set(duration);
-  }
-
-  formatTime(seconds: number): string {
-    const minutes = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+    this.trackDuration.set({
+      duration,
+      currentTime,
+      progress: (currentTime / duration) * 100
+    });
   }
 }
