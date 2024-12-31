@@ -45,6 +45,7 @@ export class AppComponent implements OnInit, OnDestroy {
       track.title.toLowerCase().includes(this.searchQuery().toLowerCase())
     )
   );
+  numTracks = computed(() => this.filteredTracks().length);
 
   audio = viewChild.required<ElementRef<HTMLAudioElement>>('a');
   audioNativeElement = computed(() => this.audio().nativeElement);
@@ -105,7 +106,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   loadedAudio() {
     this.numLoaded.update((prev) => prev + 1);
-    if (this.numLoaded() === this.tracks().length) {
+    if (this.numLoaded() === this.numTracks()) {
       this.loadTrack();
       this.isPreloadingDone.set(true);
     }
@@ -188,9 +189,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   handleNext() {
-    this.currentTrackIndex.set(
-      (this.currentTrackIndex() + 1) % this.tracks().length
-    );
+    this.currentTrackIndex.update((prev) => (prev + 1) % this.numTracks());
     this.loadTrack();
     this.isPlaying.set(true);
     this.audioNativeElement().play();
@@ -198,9 +197,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   handlePrevious() {
-    this.currentTrackIndex.set(
-      (this.currentTrackIndex() - 1 + this.tracks().length) % this.tracks().length
-    );
+    this.currentTrackIndex.update((prev) => (prev - 1 + this.numTracks()) % this.numTracks());
     this.loadTrack();
     this.isPlaying.set(true);
     this.audioNativeElement().play();
