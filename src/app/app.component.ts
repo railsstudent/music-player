@@ -92,11 +92,12 @@ export class AppComponent implements OnInit {
     )
   );
   currentTrack = computed(() => 
-    this.currentTrackIndex() < 0 ? undefined : this.tracks()[this.currentTrackIndex()]);
+    this.currentTrackIndex() < 0 ? undefined : this.filteredTracks()[this.currentTrackIndex()]);
   isChangeTrack = computed(() => {
     const currentTrack = this.currentTrack();
     return !!this.audio && !!currentTrack && currentTrack.url !== this.audio.src;
   })
+  filteredTrackLength = computed(() => this.filteredTracks().length);
 
   audio: HTMLAudioElement | null = null;
 
@@ -188,7 +189,7 @@ export class AppComponent implements OnInit {
   }
 
   private handleNext() {
-    this.currentTrackIndex.update((prev) => (prev + 1) % this.tracks.length);
+    this.currentTrackIndex.update((prev) => (prev + 1) % this.filteredTrackLength());
   }
 
   private async playTrack() {
@@ -210,7 +211,7 @@ export class AppComponent implements OnInit {
   }
 
   private handlePrevious() {
-    this.currentTrackIndex.update((prev) => (prev - 1 + this.tracks.length) % this.tracks.length);
+    this.currentTrackIndex.update((prev) => (prev - 1 + this.filteredTrackLength()) % this.filteredTrackLength());
   }
 
   handleSearch(event: Event) {
