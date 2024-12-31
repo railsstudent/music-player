@@ -11,17 +11,19 @@ import { MusicPlayerFilterBarComponent } from './music-player/music-player-filte
 import { TrackListComponent } from './music-player/track-list.component';
 import { ErrorComponent } from './error/error.component';
 import { TrackInfoComponent } from './music-player/track-info.component';
+import { PlayerControlsComponent } from './music-player/player-controls.component';
 
 @Component({
   selector: 'app-root',
-  imports: [MusicPlayerFilterBarComponent, TrackListComponent, ErrorComponent, TrackInfoComponent],
+  imports: [MusicPlayerFilterBarComponent, TrackListComponent, ErrorComponent, 
+    TrackInfoComponent, PlayerControlsComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit {
   volume = signal(100);
-  tracks: Track[] = [
+  tracks = signal<Track[]>([
     {
       title: 'Serenity',
       artist: 'Piano and Strings',
@@ -72,7 +74,7 @@ export class AppComponent implements OnInit {
       artist: 'Island Rhythms',
       url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3',
     },
-  ];
+  ]);
 
   currentTrackIndex = signal(0);
   isPlaying = signal(false);
@@ -83,19 +85,30 @@ export class AppComponent implements OnInit {
   currentTime = signal(0);
   duration = signal(0);
   filteredTracks = computed(() =>
-    this.tracks.filter((track) =>
-      track.title.toLowerCase().includes(this.searchQuery().toLowerCase())
+    this.tracks().filter(({ title }) =>
+      title.toLowerCase().includes(this.searchQuery().toLowerCase())
     )
   );
   currentTrack = computed(() => 
-    this.currentTrackIndex() < 0 ? undefined : this.tracks[this.currentTrackIndex()]);
+    this.currentTrackIndex() < 0 ? undefined : this.tracks()[this.currentTrackIndex()]);
+  isChangeTrack = computed(() => {
+    const currentTrack = this.currentTrack();
+    return !!this.audio && !!currentTrack && currentTrack.url !== this.audio.src;
+  })
 
-  private audio: HTMLAudioElement | null = null;
+  audio: HTMLAudioElement | null = null;
 
   constructor() {
-    effect(() => {
-      if (this.isPlaying()) {
-        this.playTrack();
+    effect(async () => {
+      if (this.audio) { 
+        this.error.set(null); 
+        this.audio.muted = this.isMuted();
+        if (this.isPlaying()) {
+          // await this.audio.play();
+          this.playTrack();
+        } else {
+          this.audio.pause();
+        }
       }
     });
   }
@@ -113,7 +126,7 @@ export class AppComponent implements OnInit {
     switch (event.key) {
       case ' ':
         event.preventDefault();
-        this.handlePlayPause();
+        this.isPlaying.set(!this.isPlaying())
         break;
       case 'ArrowRight':
         this.handleNext();
@@ -128,7 +141,7 @@ export class AppComponent implements OnInit {
         this.decreaseVolume();
         break;
       case 'm':
-        this.toggleMute();
+        this.isMuted.set(!this.isMuted());
         break;
       case 's':
         this.handleSearch(event);
@@ -139,6 +152,7 @@ export class AppComponent implements OnInit {
   loadTrack() {
     if (!this.audio?.paused) {
       this.audio?.pause();
+      this.isPlaying.set(false);
     }
 
     this.audio = null;
@@ -184,26 +198,7 @@ export class AppComponent implements OnInit {
     }
   }
 
-  async handlePlayPause() {
-    try {
-      this.error.set(null);
-      if (this.audio) {
-        if (this.isPlaying()) {
-          this.audio.pause();
-        } else {
-          await this.audio.play();
-        }
-        this.isPlaying.set(!this.isPlaying());
-      } 
-    } catch (e) {
-      if (!this.audio?.paused) {
-        this.audio?.pause();
-      }
-      this.error.set('Playback failed. Please try again.');
-    }
-  }
-
-  handleNext() {
+  private handleNext() {
     this.currentTrackIndex.update((prev) => (prev + 1) % this.tracks.length);
   }
 
@@ -212,6 +207,7 @@ export class AppComponent implements OnInit {
       this.error.set(null);
       this.loadTrack();
       await this.audio?.play();
+      this.isPlaying.set(true);
     } catch (e) {
       if (!this.audio?.paused) {
         this.audio?.pause();
@@ -224,7 +220,7 @@ export class AppComponent implements OnInit {
     }
   }
 
-  handlePrevious() {
+  private handlePrevious() {
     this.currentTrackIndex.update((prev) => (prev - 1 + this.tracks.length) % this.tracks.length);
   }
 
@@ -242,13 +238,6 @@ export class AppComponent implements OnInit {
   handleSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchQuery.set(input.value);
-  }
-
-  toggleMute() {
-    this.isMuted.set(!this.isMuted());
-    if (this.audio) {
-      this.audio.muted = this.isMuted();
-    }
   }
 
   updateProgress() {

@@ -12,7 +12,7 @@
   <app-track-info class="w-full max-w-md" [track]="currentTrack()" />
 
   <!-- Player Controls -->
-  <div class="flex justify-center space-x-4 mb-6 w-full max-w-md">
+  <!-- <div class="flex justify-center space-x-4 mb-6 w-full max-w-md">
     <button (click)="handlePrevious()" class="btn">
       <i class="fas fa-step-backward"></i>
     </button>
@@ -30,7 +30,10 @@
     <button (click)="toggleMute()" class="btn">
       <i class="fas" [class]="{ 'fa-volume-mute': isMuted(), 'fa-volume-up': !isMuted() }"></i>
     </button>
-  </div>
+  </div> -->
+  {{ isChangeTrack() }}, {{ currentTrack()?.url }}, {{ audio?.src }}
+  <app-player-controls class="w-full max-w-md" [tracks]="tracks()" 
+    [(isPlaying)]="isPlaying" [(isMuted)]="isMuted" [(currentTrackIndex)]="currentTrackIndex" />
 
   <!-- Current Track Duration and Custom Slider -->
   <div class="flex items-center justify-between mb-4 w-full max-w-md">
