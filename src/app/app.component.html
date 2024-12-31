@@ -3,87 +3,92 @@
     <h1 class="text-3xl font-bold text-center">Music Player</h1>
   </header>
 
-  @if (error()) {
-  <div class="bg-red-500 p-4 mb-4 rounded w-full max-w-md">
-    <div class="flex items-center">
-      <span class="material-icons mr-2">error_outline</span>
-      <div>
-        <h4 class="font-bold">Error</h4>
-        <p>{{ error() }}</p>
-      </div>
-    </div>
-  </div>
-  }
-
-  <!-- Search Bar -->
-  <div class="relative mb-4 w-full max-w-md">
-    <input type="text" placeholder="Search tracks..." (input)="handleSearch($event)"
-      class="w-full p-2 rounded bg-gray-700 text-white" />
-  </div>
-
-  <!-- Current Track Info -->
-  <div class="text-center mb-4 w-full max-w-md">
-    <h2 class="text-2xl font-bold">{{ tracks[currentTrackIndex()].title }}</h2>
-    <p class="text-gray-400">{{ tracks[currentTrackIndex()].artist }}</p>
-  </div>
-
-  <!-- Player Controls -->
-  <div class="flex justify-center space-x-4 mb-6 w-full max-w-md">
-    <button (click)="handlePrevious()" class="btn">
-      <i class="fas fa-step-backward"></i>
-    </button>
-    <button (click)="handlePlayPause()" class="btn">
-      @if (isPlaying()) {
-      <i class="fas fa-pause"></i>
-      }
-      @else {
-      <i class="fas fa-play"></i>
-      }
-    </button>
-    <button (click)="handleNext()" class="btn">
-      <i class="fas fa-step-forward"></i>
-    </button>
-    <button (click)="toggleMute()" class="btn">
-      <i class="fas" [ngClass]="{ 'fa-volume-mute': isMuted(), 'fa-volume-up': !isMuted() }"></i>
-    </button>
-  </div>
-
-  <!-- Current Track Duration and Custom Slider -->
-  <div class="flex items-center justify-between mb-4 w-full max-w-md">
-    <span class="text-sm text-gray-400">{{ formatTime(currentTime()) }}</span>
-    <div class="relative flex-1 mx-2">
-      <input type="range" min="0" max="100" [value]="progress()" (input)="handleSeek($event)"
-        class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider-thumb" />
-    </div>
-    <span class="text-sm text-gray-400">{{ formatTime(duration()) }}</span>
-  </div>
-
-  <!-- Volume Control -->
-  <div class="relative mb-4 w-full max-w-md flex items-center">
-    <button (click)="decreaseVolume()" class="volume-btn mr-2">-</button>
-    <input type="range" min="0" max="100" [value]="volume()" (input)="handleVolumeChange($event)"
-      class="w-full h-4 bg-gray-600 rounded-lg appearance-none cursor-pointer slider-thumb" />
-    <span class="absolute left-1/2 transform -translate-x-1/2">{{ volume() }}%</span>
-    <button (click)="increaseVolume()" class="volume-btn ml-2">+</button>
-  </div>
-
   <audio #a></audio>
 
-  <!-- Track List -->
-  <h3 class="text-xl font-semibold mb-2">Track List</h3>
-  <div class="h-[200px] w-full max-w-md rounded-md border border-gray-700 p-4 overflow-y-auto custom-scrollbar"
-    #trackListContainer>
-    @for (track of filteredTracks(); track $index) {
-    <div class="p-2 cursor-pointer hover:bg-gray-700 rounded-md"
-      [ngClass]="{ 'bg-gray-700': $index === currentTrackIndex() }" (click)="handleTrackSelect($index)">
-      <p class="font-medium">{{ track.title }}</p>
-      <p class="text-sm text-gray-400">{{ track.artist }}</p>
+  @if(isPreloadingDone()) {
+
+    @if (error()) {
+    <div class="bg-red-500 p-4 mb-4 rounded w-full max-w-md">
+      <div class="flex items-center">
+        <span class="material-icons mr-2">error_outline</span>
+        <div>
+          <h4 class="font-bold">Error</h4>
+          <p>{{ error() }}</p>
+        </div>
+      </div>
     </div>
     }
-    @empty {
-    <p class="text-gray-400">No tracks found</p>
-    }
-  </div>
+
+    <!-- Search Bar -->
+    <div class="relative mb-4 w-full max-w-md">
+      <input type="text" placeholder="Search tracks..." (input)="handleSearch($event)"
+        class="w-full p-2 rounded bg-gray-700 text-white" />
+    </div>
+
+    <!-- Current Track Info -->
+    <div class="text-center mb-4 w-full max-w-md">
+      <h2 class="text-2xl font-bold">{{ tracks()[currentTrackIndex()].title }}</h2>
+      <p class="text-gray-400">{{ tracks()[currentTrackIndex()].artist }}</p>
+    </div>
+
+    <!-- Player Controls -->
+    <div class="flex justify-center space-x-4 mb-6 w-full max-w-md">
+      <button (click)="handlePrevious()" class="btn">
+        <i class="fas fa-step-backward"></i>
+      </button>
+      <button (click)="handlePlayPause()" class="btn">
+        @if (isPlaying()) {
+        <i class="fas fa-pause"></i>
+        }
+        @else {
+        <i class="fas fa-play"></i>
+        }
+      </button>
+      <button (click)="handleNext()" class="btn">
+        <i class="fas fa-step-forward"></i>
+      </button>
+      <button (click)="toggleMute()" class="btn">
+        <i class="fas" [ngClass]="{ 'fa-volume-mute': isMuted(), 'fa-volume-up': !isMuted() }"></i>
+      </button>
+    </div>
+
+    <!-- Current Track Duration and Custom Slider -->
+    <div class="flex items-center justify-between mb-4 w-full max-w-md">
+      <span class="text-sm text-gray-400">{{ formatTime(currentTime()) }}</span>
+      <div class="relative flex-1 mx-2">
+        <input type="range" min="0" max="100" [value]="progress()" (input)="handleSeek($event)"
+          class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider-thumb" />
+      </div>
+      <span class="text-sm text-gray-400">{{ formatTime(duration()) }}</span>
+    </div>
+
+    <!-- Volume Control -->
+    <div class="relative mb-4 w-full max-w-md flex items-center">
+      <button (click)="decreaseVolume()" class="volume-btn mr-2">-</button>
+      <input type="range" min="0" max="100" [value]="volume()" (input)="handleVolumeChange($event)"
+        class="w-full h-4 bg-gray-600 rounded-lg appearance-none cursor-pointer slider-thumb" />
+      <span class="absolute left-1/2 transform -translate-x-1/2">{{ volume() }}%</span>
+      <button (click)="increaseVolume()" class="volume-btn ml-2">+</button>
+    </div>
+
+    <!-- Track List -->
+    <h3 class="text-xl font-semibold mb-2">Track List</h3>
+    <div class="h-[200px] w-full max-w-md rounded-md border border-gray-700 p-4 overflow-y-auto custom-scrollbar"
+      #trackListContainer>
+      @for (track of filteredTracks(); track $index) {
+      <div class="p-2 cursor-pointer hover:bg-gray-700 rounded-md"
+        [ngClass]="{ 'bg-gray-700': $index === currentTrackIndex() }" (click)="handleTrackSelect($index)">
+        <p class="font-medium">{{ track.title }}</p>
+        <p class="text-sm text-gray-400">{{ track.artist }}</p>
+      </div>
+      }
+      @empty {
+      <p class="text-gray-400">No tracks found</p>
+      }
+    </div>
+  } @else {
+    <p>Preloading audio files ({{ numLoaded() }} / {{ tracks().length }})</p>
+  }
   <footer class="w-full max-w-md mt-4 text-center">
     <p class="text-sm text-gray-400">Made by
       <a href="https://manthanank.github.io/" class="text-blue-400">Manthan Ankolekar</a>

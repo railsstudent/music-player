@@ -10,6 +10,7 @@ import {
   viewChild,
   DestroyRef,
   inject,
+  OnDestroy,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { fromEvent } from 'rxjs';
@@ -23,7 +24,7 @@ import { TRACK_DATA } from './track-data';
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
   @ViewChild('trackListContainer') trackListContainer!: ElementRef;
   volume = signal(100);
   tracks = signal<Track[]>(TRACK_DATA);
@@ -41,15 +42,17 @@ export class AppComponent implements OnInit {
       track.title.toLowerCase().includes(this.searchQuery().toLowerCase())
     )
   );
-  // private audio: HTMLAudioElement | null = null;
 
   audio = viewChild.required<ElementRef<HTMLAudioElement>>('a');
   audioNativeElement = computed(() => this.audio().nativeElement);
 
   destroyRef$ = inject(DestroyRef);
 
+  isPreloadingDone = signal(false);
+  numLoaded = signal(0);
+  audios: HTMLAudioElement[] = [];
+
   ngOnInit() {
-    this.loadTrack();
     window.addEventListener('keydown', this.handleKeydown.bind(this));
 
     fromEvent(this.audioNativeElement(), 'timeupdate')
@@ -70,11 +73,32 @@ export class AppComponent implements OnInit {
         this.error.set('Unable to load audio. Please check the audio source.');
         this.isPlaying.set(false);
       });
+
+    for (const track of this.tracks()) {
+      console.log('preload url', track.url);
+
+      const audio = new Audio();
+      this.audios.push(audio);
+      audio.addEventListener('canplaythrough', this.loadedAudio.bind(this), false);
+      audio.src = track.url;
+    }
   }
 
-  // ngOnDestroy() {
-  //   window.removeEventListener('keydown', this.handleKeydown.bind(this));
-  // }
+  loadedAudio() {
+    this.numLoaded.update((prev) => prev + 1);
+    if (this.numLoaded() === this.tracks().length) {
+      this.loadTrack();
+      this.isPreloadingDone.set(true);
+    }
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('keydown', this.handleKeydown.bind(this));
+
+    for (const audio of this.audios) {
+      audio.removeEventListener('canplaythrough', this.loadedAudio.bind(this));
+    }
+  }
 
   handleKeydown(event: KeyboardEvent) {
     switch (event.key) {
@@ -97,20 +121,26 @@ export class AppComponent implements OnInit {
       case 'm':
         this.toggleMute();
         break;
-      case 's':
-        this.handleSearch(event);
-        break;
     }
   }
 
   loadTrack() {
-    if (!this.audioNativeElement().paused) {
-      this.audioNativeElement().pause();
-      this.isPlaying.set(false);
-    }
+    try {
+      if (!this.audioNativeElement().paused) {
+        this.audioNativeElement().pause();
+        this.isPlaying.set(false);
+      }
 
-    if (this.volume() !== null) {
-      this.setVolume(this.volume());
+      this.audioNativeElement().src = this.filteredTracks()[this.currentTrackIndex()].url;
+
+      if (this.volume() !== null) {
+        this.setVolume(this.volume());
+      }
+    } catch {
+      if (!this.audioNativeElement().paused) {
+        this.audioNativeElement().pause();
+        this.isPlaying.set(false);
+      }
     }
   }
 
@@ -163,7 +193,7 @@ export class AppComponent implements OnInit {
 
   handleNext() {
     this.currentTrackIndex.set(
-      (this.currentTrackIndex() + 1) % this.tracks.length
+      (this.currentTrackIndex() + 1) % this.tracks().length
     );
     this.loadTrack();
     this.isPlaying.set(true);
@@ -173,7 +203,7 @@ export class AppComponent implements OnInit {
 
   handlePrevious() {
     this.currentTrackIndex.set(
-      (this.currentTrackIndex() - 1 + this.tracks.length) % this.tracks.length
+      (this.currentTrackIndex() - 1 + this.tracks().length) % this.tracks().length
     );
     this.loadTrack();
     this.isPlaying.set(true);
