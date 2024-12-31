@@ -11,11 +11,13 @@ import {
   DestroyRef,
   inject,
   OnDestroy,
+  effect,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { fromEvent } from 'rxjs';
+import { filter, fromEvent, map } from 'rxjs';
 import { Track } from './interfaces/track.interface';
 import { TRACK_DATA } from './track-data';
+import { WINDOW_TOKEN } from './injection-tokens/window.token';
 
 @Component({
   selector: 'app-root',
@@ -51,10 +53,26 @@ export class AppComponent implements OnInit, OnDestroy {
   isPreloadingDone = signal(false);
   numLoaded = signal(0);
   audios: HTMLAudioElement[] = [];
+  window = inject(WINDOW_TOKEN);
+
+  constructor() {
+    if (this.window) {
+      fromEvent(this.window, 'keydown')
+        .pipe(
+          filter((e) => e instanceof KeyboardEvent),
+          map((e) => e as KeyboardEvent),
+          takeUntilDestroyed()
+        )
+        .subscribe((e) => this.handleKeydown(e));
+    }
+
+    effect(() => {
+      this.audioNativeElement().volume = this.volume() / 100;
+      this.audioNativeElement().muted = this.isMuted();
+    });
+  }
 
   ngOnInit() {
-    window.addEventListener('keydown', this.handleKeydown.bind(this));
-
     fromEvent(this.audioNativeElement(), 'timeupdate')
       .pipe(takeUntilDestroyed(this.destroyRef$))
       .subscribe(() => this.updateProgress());
@@ -93,8 +111,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    window.removeEventListener('keydown', this.handleKeydown.bind(this));
-
     for (const audio of this.audios) {
       audio.removeEventListener('canplaythrough', this.loadedAudio.bind(this));
     }
@@ -132,10 +148,6 @@ export class AppComponent implements OnInit, OnDestroy {
       }
 
       this.audioNativeElement().src = this.filteredTracks()[this.currentTrackIndex()].url;
-
-      if (this.volume() !== null) {
-        this.setVolume(this.volume());
-      }
     } catch {
       if (!this.audioNativeElement().paused) {
         this.audioNativeElement().pause();
@@ -148,39 +160,28 @@ export class AppComponent implements OnInit, OnDestroy {
     const input = event.target as HTMLInputElement;
     const value = parseFloat(input.value);
     this.volume.set(value);
-    this.setVolume(value);
   }
 
   increaseVolume() {
     const newVolume = Math.min((this.volume() || 50) + 10, 100);
     this.volume.set(newVolume);
-    this.setVolume(newVolume);
   }
 
   decreaseVolume() {
     const newVolume = Math.max((this.volume() || 50) - 10, 0);
     this.volume.set(newVolume);
-    this.setVolume(newVolume);
-  }
-
-  setVolume(value: number) {
-    // if (this.audio) {
-      this.audioNativeElement().volume = value / 100;
-    // }
   }
 
   handlePlayPause() {
-    // if (this.audio) {
-      if (this.isPlaying()) {
-        this.audioNativeElement().pause();
-      } else {
-        this.audioNativeElement().play()
-        .catch(() => {
-          this.error.set('Playback failed. Please try again.');
-        });
-      }
-      this.isPlaying.set(!this.isPlaying());
-    // }
+    if (this.isPlaying()) {
+      this.audioNativeElement().pause();
+    } else {
+      this.audioNativeElement().play()
+      .catch(() => {
+        this.error.set('Playback failed. Please try again.');
+      });
+    }
+    this.isPlaying.set(!this.isPlaying());
   }
 
   scrollToCurrentTrack() {
@@ -224,10 +225,8 @@ export class AppComponent implements OnInit, OnDestroy {
     const value = parseFloat(input.value);
     this.progress.set(value);
 
-    // if (this.audio) {
-      const newTime = (value / 100) * this.audioNativeElement().duration;
-      this.audioNativeElement().currentTime = newTime;
-    // }
+    const newTime = (value / 100) * this.audioNativeElement().duration;
+    this.audioNativeElement().currentTime = newTime;
   }
 
   handleSearch(event: Event) {
@@ -237,19 +236,14 @@ export class AppComponent implements OnInit, OnDestroy {
 
   toggleMute() {
     this.isMuted.set(!this.isMuted());
-//    if (this.audio) {
-      this.audioNativeElement().muted = this.isMuted();
-//    }
   }
 
   updateProgress() {
-    // if (this.audio) {
-      const duration = this.audioNativeElement().duration || 1;
-      const currentTime = this.audioNativeElement().currentTime;
-      this.progress.set((currentTime / duration) * 100);
-      this.currentTime.set(currentTime);
-      this.duration.set(duration);
-    // }
+    const duration = this.audioNativeElement().duration || 1;
+    const currentTime = this.audioNativeElement().currentTime;
+    this.progress.set((currentTime / duration) * 100);
+    this.currentTime.set(currentTime);
+    this.duration.set(duration);
   }
 
   formatTime(seconds: number): string {
