@@ -46,13 +46,7 @@
   </div>
 
   <!-- Volume Control -->
-  <div class="relative mb-4 w-full max-w-md flex items-center">
-    <button (click)="decreaseVolume()" class="volume-btn mr-2">-</button>
-    <input type="range" min="0" max="100" [value]="volume()" (input)="handleVolumeChange($event)"
-      class="w-full h-4 bg-gray-600 rounded-lg appearance-none cursor-pointer slider-thumb" />
-    <span class="absolute left-1/2 transform -translate-x-1/2">{{ volume() }}%</span>
-    <button (click)="increaseVolume()" class="volume-btn ml-2">+</button>
-  </div>
+  <app-volume-control class="relative mb-4 w-full max-w-md" [(volume)]="volume" />
 
   <!-- Track List -->
   <app-track-list class="h-[200px] w-full max-w-md"

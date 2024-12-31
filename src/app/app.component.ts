@@ -12,11 +12,12 @@ import { TrackListComponent } from './music-player/track-list.component';
 import { ErrorComponent } from './error/error.component';
 import { TrackInfoComponent } from './music-player/track-info.component';
 import { PlayerControlsComponent } from './music-player/player-controls.component';
+import { VolumeControlComponent } from './music-player/volume-control.component';
 
 @Component({
   selector: 'app-root',
   imports: [MusicPlayerFilterBarComponent, TrackListComponent, ErrorComponent, 
-    TrackInfoComponent, PlayerControlsComponent],
+    TrackInfoComponent, PlayerControlsComponent, VolumeControlComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -109,6 +110,8 @@ export class AppComponent implements OnInit {
         } else {
           this.audio.pause();
         }
+
+        this.audio.volume = this.volume() / 100;
       }
     });
   }
@@ -168,34 +171,16 @@ export class AppComponent implements OnInit {
         this.isPlaying.set(false);
       });
     }
-    if (this.volume() !== null) {
-      this.setVolume(this.volume());
-    }
-  }
-
-  handleVolumeChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const value = parseFloat(input.value);
-    this.volume.set(value);
-    this.setVolume(value);
   }
 
   increaseVolume() {
     const newVolume = Math.min((this.volume() || 50) + 10, 100);
     this.volume.set(newVolume);
-    this.setVolume(newVolume);
   }
 
   decreaseVolume() {
     const newVolume = Math.max((this.volume() || 50) - 10, 0);
     this.volume.set(newVolume);
-    this.setVolume(newVolume);
-  }
-
-  setVolume(value: number) {
-    if (this.audio) {
-      this.audio.volume = value / 100;
-    }
   }
 
   private handleNext() {
