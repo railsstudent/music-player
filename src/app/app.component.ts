@@ -20,10 +20,11 @@ import { TRACK_DATA } from './track-data';
 import { WINDOW_TOKEN } from './injection-tokens/window.token';
 import { VolumeControlComponent } from './music-player/volume-control/volume-control.component';
 import { TrackInfoComponent } from './music-player/track-info/track-info.component';
+import { ErrorComponent } from './error/error.component';
 
 @Component({
   selector: 'app-root',
-  imports: [NgClass, VolumeControlComponent, TrackInfoComponent],
+  imports: [NgClass, VolumeControlComponent, TrackInfoComponent, ErrorComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
