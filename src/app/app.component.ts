@@ -1,4 +1,3 @@
-import { NgClass } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -16,6 +15,7 @@ import { filter, fromEvent, map } from 'rxjs';
 import { ErrorComponent } from './error/error.component';
 import { WINDOW_TOKEN } from './injection-tokens/window.token';
 import { Track } from './interfaces/track.interface';
+import { PlayerControlsComponent } from './music-player/player-controls/player-controls.component';
 import { TrackDurationComponent } from './music-player/track-duration/track-duration.component';
 import { TrackFilterComponent } from './music-player/track-filter/track-filter.component';
 import { TrackInfoComponent } from './music-player/track-info/track-info.component';
@@ -26,7 +26,7 @@ import { TRACK_DATA } from './track-data';
 @Component({
   selector: 'app-root',
   imports: [VolumeControlComponent, TrackInfoComponent, ErrorComponent, TrackFilterComponent,
-    TrackListComponent, TrackDurationComponent
+    TrackListComponent, TrackDurationComponent, PlayerControlsComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
@@ -117,21 +117,6 @@ export class AppComponent implements OnInit {
         event.preventDefault();
         this.handlePlayPause();
         break;
-      case 'ArrowRight':
-        this.handleNext();
-        break;
-      case 'ArrowLeft':
-        this.handlePrevious();
-        break;
-      case 'ArrowUp':
-        this.increaseVolume();
-        break;
-      case 'ArrowDown':
-        this.decreaseVolume();
-        break;
-      case 'm':
-        this.toggleMute();
-        break;
     }
   }
 
@@ -152,16 +137,6 @@ export class AppComponent implements OnInit {
         this.isPlaying.set(false);
       }
     }
-  }
-
-  increaseVolume() {
-    const newVolume = Math.min((this.volume() || 50) + 10, 100);
-    this.volume.set(newVolume);
-  }
-
-  decreaseVolume() {
-    const newVolume = Math.max((this.volume() || 50) - 10, 0);
-    this.volume.set(newVolume);
   }
 
   handlePlayPause() {

@@ -1,5 +1,8 @@
-import { ChangeDetectionStrategy, Component, model } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, model } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { WINDOW_TOKEN } from '../../injection-tokens/window.token';
+import { filter, fromEvent, map } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-volume-control',
@@ -17,6 +20,27 @@ import { FormsModule } from '@angular/forms';
 })
 export class VolumeControlComponent {
   volume = model.required<number>();
+
+  window = inject(WINDOW_TOKEN);
+
+  constructor() {
+    if (this.window) {
+      fromEvent(this.window, 'keydown')
+        .pipe(
+          filter((e) => e instanceof KeyboardEvent),
+          map((e) => e as KeyboardEvent),
+          filter((e) => ['ArrowUp', 'ArrowDown'].includes(e.key)),
+          takeUntilDestroyed()
+        )
+        .subscribe((e) => {
+          if (e.key === 'ArrowUp') {
+            this.increaseVolume();
+          } else if (e.key === 'ArrowDown')
+            this.decreaseVolume();
+          }
+        );
+    }
+  }
 
   increaseVolume() {
     const newVolume = Math.min((this.volume() || 50) + 10, 100);
