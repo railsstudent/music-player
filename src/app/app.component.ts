@@ -65,6 +65,8 @@ export class AppComponent implements OnInit {
     progress: 0,
   });
 
+  canPlay = signal(false);
+
   constructor() {
     if (this.window) {
       fromEvent(this.window, 'keydown')
@@ -80,9 +82,11 @@ export class AppComponent implements OnInit {
       this.audioNativeElement().volume = this.volume() / 100;
       this.audioNativeElement().muted = this.isMuted();
 
-      this.loadTrack();
-      this.isPlaying.set(true);
-      this.audioNativeElement().play();
+      if (this.canPlay()) {
+        this.loadTrack();
+        this.isPlaying.set(true);
+        this.audioNativeElement().play();
+      }
     });
   }
 
@@ -170,14 +174,17 @@ export class AppComponent implements OnInit {
       });
     }
     this.isPlaying.set(!this.isPlaying());
+    this.canPlay.set(true);
   }
 
   handleNext() {
     this.currentTrackIndex.update((prev) => (prev + 1) % this.numTracks());
+    this.canPlay.set(true);
   }
 
   handlePrevious() {
     this.currentTrackIndex.update((prev) => (prev - 1 + this.numTracks()) % this.numTracks());
+    this.canPlay.set(true);
   }
 
   handleSeek(value: number) {
