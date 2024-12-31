@@ -36,14 +36,8 @@
     [(isPlaying)]="isPlaying" [(isMuted)]="isMuted" [(currentTrackIndex)]="currentTrackIndex" />
 
   <!-- Current Track Duration and Custom Slider -->
-  <div class="flex items-center justify-between mb-4 w-full max-w-md">
-    <span class="text-sm text-gray-400">{{ formatTime(currentTime()) }}</span>
-    <div class="relative flex-1 mx-2">
-      <input type="range" min="0" max="100" [value]="progress()" (input)="handleSeek($event)"
-        class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider-thumb" />
-    </div>
-    <span class="text-sm text-gray-400">{{ formatTime(duration()) }}</span>
-  </div>
+  <app-progress-bar class="mb-4 w-full max-w-md" [(progress)]="progress" [currentTime]="currentTime()" 
+    [duration]="duration()" />
 
   <!-- Volume Control -->
   <app-volume-control class="relative mb-4 w-full max-w-md" [(volume)]="volume" />

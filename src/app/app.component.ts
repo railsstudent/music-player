@@ -13,11 +13,12 @@ import { ErrorComponent } from './error/error.component';
 import { TrackInfoComponent } from './music-player/track-info.component';
 import { PlayerControlsComponent } from './music-player/player-controls.component';
 import { VolumeControlComponent } from './music-player/volume-control.component';
+import { ProgressBarComponent } from './music-player/progress-bar.component';
 
 @Component({
   selector: 'app-root',
   imports: [MusicPlayerFilterBarComponent, TrackListComponent, ErrorComponent, 
-    TrackInfoComponent, PlayerControlsComponent, VolumeControlComponent],
+    TrackInfoComponent, PlayerControlsComponent, VolumeControlComponent, ProgressBarComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -79,10 +80,10 @@ export class AppComponent implements OnInit {
 
   currentTrackIndex = signal(0);
   isPlaying = signal(false);
-  progress = signal(0);
   error = signal<string | null>(null);
   searchQuery = signal('');
   isMuted = signal(false);
+  progress = signal(0);
   currentTime = signal(0);
   duration = signal(0);
   filteredTracks = computed(() =>
@@ -112,6 +113,9 @@ export class AppComponent implements OnInit {
         }
 
         this.audio.volume = this.volume() / 100;
+        const duration  = this.audio.duration || 1;
+        const newTime = (this.progress() / 100) * duration;
+        this.audio.currentTime = newTime;
       }
     });
   }
@@ -207,17 +211,6 @@ export class AppComponent implements OnInit {
 
   private handlePrevious() {
     this.currentTrackIndex.update((prev) => (prev - 1 + this.tracks.length) % this.tracks.length);
-  }
-
-  handleSeek(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const value = parseFloat(input.value);
-    this.progress.set(value);
-
-    if (this.audio) {
-      const newTime = (value / 100) * this.audio.duration;
-      this.audio.currentTime = newTime;
-    }
   }
 
   handleSearch(event: Event) {
