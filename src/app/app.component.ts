@@ -2,11 +2,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
+  inject,
   OnInit,
   signal,
 } from '@angular/core';
-import { Track } from './music-player/interfaces/track.interface';
 import { MusicPlayerFilterBarComponent } from './music-player/music-player-filter-bar.component';
 import { TrackListComponent } from './music-player/track-list.component';
 import { ErrorComponent } from './error/error.component';
@@ -14,7 +15,10 @@ import { TrackInfoComponent } from './music-player/track-info.component';
 import { PlayerControlsComponent } from './music-player/player-controls.component';
 import { VolumeControlComponent } from './music-player/volume-control.component';
 import { ProgressBarComponent } from './music-player/progress-bar.component';
-import { playlist } from './app.const';
+import { TRACK_DATA } from './constants/track-data.const';
+import { WINDOW_TOKEN } from './constants/app.const';
+import { filter, fromEvent, map, tap } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-root',
@@ -24,9 +28,9 @@ import { playlist } from './app.const';
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppComponent implements OnInit {
+export class AppComponent {
   volume = signal(100);
-  tracks = signal(playlist);
+  tracks = signal(TRACK_DATA);
 
   currentTrackIndex = signal(0);
   isPlaying = signal(false);
@@ -47,7 +51,21 @@ export class AppComponent implements OnInit {
 
   audio: HTMLAudioElement | null = null;
 
+  window = inject(WINDOW_TOKEN);
+  destroyRef$ = inject(DestroyRef);
+
   constructor() {
+    this.loadTrack();
+    if (this.window) {
+      fromEvent(this.window, 'keydown')
+        .pipe(
+          filter((e) => e instanceof KeyboardEvent),
+          map((e) => e as KeyboardEvent),
+          tap((e) => this.handleKeydown(e)),
+          takeUntilDestroyed(this.destroyRef$)
+        ).subscribe()
+    }
+
     effect(async () => {
       if (this.audio) { 
         this.error.set(null); 
@@ -65,15 +83,6 @@ export class AppComponent implements OnInit {
         this.audio.currentTime = newTime;
       }
     });
-  }
-
-  ngOnInit() {
-    this.loadTrack();
-    window.addEventListener('keydown', this.handleKeydown.bind(this));
-  }
-
-  ngOnDestroy() {
-    window.removeEventListener('keydown', this.handleKeydown.bind(this));
   }
 
   handleKeydown(event: KeyboardEvent) {

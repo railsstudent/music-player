@@ -1,6 +1,6 @@
-import { Track } from './music-player/interfaces/track.interface';
+import { Track } from '../music-player/interfaces/track.interface';
 
-export const playlist: Track[] = [
+export const TRACK_DATA: Track[] = [
     {
       title: 'Serenity',
       artist: 'Piano and Strings',
@@ -51,4 +51,4 @@ export const playlist: Track[] = [
       artist: 'Island Rhythms',
       url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3',
     },
-  ]
+]
