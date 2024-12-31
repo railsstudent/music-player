@@ -18,10 +18,11 @@ import { filter, fromEvent, map } from 'rxjs';
 import { Track } from './interfaces/track.interface';
 import { TRACK_DATA } from './track-data';
 import { WINDOW_TOKEN } from './injection-tokens/window.token';
+import { VolumeControlComponent } from './music-player/volume-control/volume-control.component';
 
 @Component({
   selector: 'app-root',
-  imports: [NgClass],
+  imports: [NgClass, VolumeControlComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
