@@ -9,10 +9,7 @@
     <app-error class="mb-4 w-full max-w-md" [error]="error()" />
 
     <!-- Search Bar -->
-    <div class="relative mb-4 w-full max-w-md">
-      <input type="text" placeholder="Search tracks..." (input)="handleSearch($event)"
-        class="w-full p-2 rounded bg-gray-700 text-white" />
-    </div>
+    <app-track-filter class="relative mb-4 w-full max-w-md" [(searchQuery)]="searchQuery" />
 
     <!-- Current Track Info -->
     <app-track-info class="mb-4 w-full max-w-md" [track]="currentTrack()" />
