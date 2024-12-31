@@ -1,30 +1,22 @@
-import { NgClass } from '@angular/common';
 import {
+  ChangeDetectionStrategy,
   Component,
+  computed,
   OnInit,
   signal,
-  computed,
-  ViewChild,
-  ElementRef,
-  ChangeDetectionStrategy,
 } from '@angular/core';
+import { Track } from './music-player/interfaces/track.interface';
 import { MusicPlayerFilterBarComponent } from './music-player/music-player-filter-bar.component';
-
-interface Track {
-  title: string;
-  artist: string;
-  url: string;
-}
+import { TrackListComponent } from './music-player/track-list.component';
 
 @Component({
   selector: 'app-root',
-  imports: [NgClass, MusicPlayerFilterBarComponent],
+  imports: [MusicPlayerFilterBarComponent, TrackListComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit {
-  @ViewChild('trackListContainer') trackListContainer!: ElementRef;
   volume = signal(100);
   tracks: Track[] = [
     {
@@ -131,7 +123,9 @@ export class AppComponent implements OnInit {
   }
 
   loadTrack() {
-    this.audio?.pause();
+    if (!this.audio?.paused) {
+      this.audio?.pause();
+    }
     this.audio = new Audio(this.tracks[this.currentTrackIndex()].url);
 
     this.audio.addEventListener('timeupdate', this.updateProgress.bind(this));
@@ -171,53 +165,46 @@ export class AppComponent implements OnInit {
     }
   }
 
-  handlePlayPause() {
-    if (this.audio) {
-      if (this.isPlaying()) {
-        this.audio.pause();
-      } else {
-        this.audio.play().catch(() => {
-          this.error.set('Playback failed. Please try again.');
-        });
+  async handlePlayPause() {
+    try {
+      this.error.set(null);
+      if (this.audio) {
+        if (this.isPlaying()) {
+          this.audio.pause();
+        } else {
+          await this.audio.play();
+        }
+        this.isPlaying.set(!this.isPlaying());
+      } 
+    } catch (e) {
+      if (!this.audio?.paused) {
+        this.audio?.pause();
       }
-      this.isPlaying.set(!this.isPlaying());
-    }
-  }
-
-  scrollToCurrentTrack() {
-    const container = this.trackListContainer.nativeElement;
-    const selectedTrack = container.children[this.currentTrackIndex()];
-    if (selectedTrack) {
-      selectedTrack.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      this.error.set('Playback failed. Please try again.');
     }
   }
 
   handleNext() {
-    this.currentTrackIndex.set(
-      (this.currentTrackIndex() + 1) % this.tracks.length
-    );
-    this.loadTrack();
-    this.isPlaying.set(true);
-    this.audio?.play();
-    this.scrollToCurrentTrack();
+    this.currentTrackIndex.update((prev) => (prev + 1) % this.tracks.length);
+    this.playTrack();
+  }
+
+  private async playTrack() {
+    try {
+      this.error.set(null);
+      this.loadTrack();
+      this.isPlaying.set(true);
+      await this.audio?.play();
+    } catch {
+      if (!this.audio?.paused) {
+        this.audio?.pause();
+      }
+    }
   }
 
   handlePrevious() {
-    this.currentTrackIndex.set(
-      (this.currentTrackIndex() - 1 + this.tracks.length) % this.tracks.length
-    );
-    this.loadTrack();
-    this.isPlaying.set(true);
-    this.audio?.play();
-    this.scrollToCurrentTrack();
-  }
-
-  handleTrackSelect(index: number) {
-    this.currentTrackIndex.set(index);
-    this.loadTrack();
-    this.isPlaying.set(true);
-    this.audio?.play();
-    this.scrollToCurrentTrack();
+    this.currentTrackIndex.update((prev) => (prev - 1 + this.tracks.length) % this.tracks.length);
+    this.playTrack();
   }
 
   handleSeek(event: Event) {

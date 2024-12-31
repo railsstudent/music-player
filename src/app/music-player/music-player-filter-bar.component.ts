@@ -4,7 +4,11 @@ import { FormsModule } from '@angular/forms';
 @Component({
   selector: 'app-music-player-filter-bar',
   imports: [FormsModule],
-  templateUrl: './music-player-filter-bar.component.html',
+  template: `
+    <div>
+      <input type="text" placeholder="Search tracks..." [(ngModel)]="searchQuery"
+          class="w-full p-2 rounded bg-gray-700 text-white" />
+    </div>`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MusicPlayerFilterBarComponent {
