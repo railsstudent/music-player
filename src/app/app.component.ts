@@ -10,10 +10,11 @@ import { Track } from './music-player/interfaces/track.interface';
 import { MusicPlayerFilterBarComponent } from './music-player/music-player-filter-bar.component';
 import { TrackListComponent } from './music-player/track-list.component';
 import { ErrorComponent } from './error/error.component';
+import { TrackInfoComponent } from './music-player/track-info.component';
 
 @Component({
   selector: 'app-root',
-  imports: [MusicPlayerFilterBarComponent, TrackListComponent, ErrorComponent],
+  imports: [MusicPlayerFilterBarComponent, TrackListComponent, ErrorComponent, TrackInfoComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -86,11 +87,16 @@ export class AppComponent implements OnInit {
       track.title.toLowerCase().includes(this.searchQuery().toLowerCase())
     )
   );
+  currentTrack = computed(() => 
+    this.currentTrackIndex() < 0 ? undefined : this.tracks[this.currentTrackIndex()]);
+
   private audio: HTMLAudioElement | null = null;
 
   constructor() {
     effect(() => {
-      this.playTrack();
+      if (this.isPlaying()) {
+        this.playTrack();
+      }
     });
   }
 
@@ -134,15 +140,20 @@ export class AppComponent implements OnInit {
     if (!this.audio?.paused) {
       this.audio?.pause();
     }
-    this.audio = new Audio(this.tracks[this.currentTrackIndex()].url);
 
-    this.audio.addEventListener('timeupdate', this.updateProgress.bind(this));
-    this.audio.addEventListener('ended', this.handleNext.bind(this));
-    this.audio.addEventListener('canplay', () => this.error.set(null));
-    this.audio.addEventListener('error', () => {
-      this.error.set('Unable to load audio. Please check the audio source.');
-      this.isPlaying.set(false);
-    });
+    this.audio = null;
+    const currentTrack = this.currentTrack();
+    if (currentTrack) {
+      this.audio = new Audio(currentTrack.url);
+
+      this.audio.addEventListener('timeupdate', this.updateProgress.bind(this));
+      this.audio.addEventListener('ended', this.handleNext.bind(this));
+      this.audio.addEventListener('canplay', () => this.error.set(null));
+      this.audio.addEventListener('error', () => {
+        this.error.set('Unable to load audio. Please check the audio source.');
+        this.isPlaying.set(false);
+      });
+    }
     if (this.volume() !== null) {
       this.setVolume(this.volume());
     }
@@ -194,25 +205,27 @@ export class AppComponent implements OnInit {
 
   handleNext() {
     this.currentTrackIndex.update((prev) => (prev + 1) % this.tracks.length);
-    this.playTrack();
   }
 
   private async playTrack() {
     try {
       this.error.set(null);
       this.loadTrack();
-      this.isPlaying.set(true);
       await this.audio?.play();
-    } catch {
+    } catch (e) {
       if (!this.audio?.paused) {
         this.audio?.pause();
+      }
+      if (e instanceof Error) {
+        this.error.set((e as Error).message);
+      } else {
+        this.error.set('Playback failed. Please try again.');
       }
     }
   }
 
   handlePrevious() {
     this.currentTrackIndex.update((prev) => (prev - 1 + this.tracks.length) % this.tracks.length);
-    this.playTrack();
   }
 
   handleSeek(event: Event) {
