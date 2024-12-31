@@ -4,9 +4,11 @@ import {
   computed,
   DestroyRef,
   effect,
+  ElementRef,
   inject,
   OnInit,
   signal,
+  viewChild,
 } from '@angular/core';
 import { MusicPlayerFilterBarComponent } from './music-player/music-player-filter-bar.component';
 import { TrackListComponent } from './music-player/track-list.component';
@@ -28,7 +30,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   volume = signal(100);
   tracks = signal(TRACK_DATA);
 
@@ -38,8 +40,6 @@ export class AppComponent {
   searchQuery = signal('');
   isMuted = signal(false);
   progress = signal(0);
-  currentTime = signal(0);
-  duration = signal(0);
   filteredTracks = computed(() =>
     this.tracks().filter(({ title }) =>
       title.toLowerCase().includes(this.searchQuery().toLowerCase())
@@ -49,40 +49,63 @@ export class AppComponent {
     this.currentTrackIndex() < 0 ? undefined : this.filteredTracks()[this.currentTrackIndex()]);
   filteredTrackLength = computed(() => this.filteredTracks().length);
 
-  audio: HTMLAudioElement | null = null;
+  audio = viewChild.required<ElementRef<HTMLAudioElement>>('a');
+  nativeAudio = computed(() => this.audio().nativeElement);
 
   window = inject(WINDOW_TOKEN);
   destroyRef$ = inject(DestroyRef);
 
   constructor() {
-    this.loadTrack();
     if (this.window) {
       fromEvent(this.window, 'keydown')
         .pipe(
           filter((e) => e instanceof KeyboardEvent),
           map((e) => e as KeyboardEvent),
           tap((e) => this.handleKeydown(e)),
-          takeUntilDestroyed(this.destroyRef$)
+          takeUntilDestroyed()
         ).subscribe()
     }
 
     effect(async () => {
-      if (this.audio) { 
-        this.error.set(null); 
-        this.audio.muted = this.isMuted();
+      // if (this.audio) { 
+        this.nativeAudio().muted = this.isMuted();
         if (this.isPlaying()) {
           // await this.audio.play();
           this.playTrack();
         } else {
-          this.audio.pause();
+          this.nativeAudio().pause();
         }
 
-        this.audio.volume = this.volume() / 100;
-        const duration  = this.audio.duration || 1;
+        this.nativeAudio().volume = this.volume() / 100;
+        const duration  = this.nativeAudio().duration || 1;
         const newTime = (this.progress() / 100) * duration;
-        this.audio.currentTime = newTime;
-      }
+        this.nativeAudio().currentTime = newTime;
+      // }
     });
+  }
+
+  ngOnInit(): void {
+    this.loadTrack();
+
+    fromEvent(this.nativeAudio(), 'timeupdate')
+      .pipe(takeUntilDestroyed(this.destroyRef$))
+      .subscribe(() => this.updateProgress());
+
+    fromEvent(this.nativeAudio(), 'ended')
+      .pipe(takeUntilDestroyed(this.destroyRef$))
+      .subscribe(() => this.handleNext());
+
+    fromEvent(this.nativeAudio(), 'canplay')
+      .pipe(takeUntilDestroyed(this.destroyRef$))
+      .subscribe(() => this.error.set(null));
+
+    fromEvent(this.nativeAudio(), 'error')
+      .pipe(takeUntilDestroyed(this.destroyRef$))
+      .subscribe(() => {
+        this.error.set('Unable to load audio. Please check the audio source.');
+        this.isPlaying.set(false);
+      });
+
   }
 
   handleKeydown(event: KeyboardEvent) {
@@ -95,52 +118,34 @@ export class AppComponent {
         this.handleNext();
         break;
       case 'ArrowLeft':
-        this.handlePrevious();
+        this.currentTrackIndex.update((prev) => (prev - 1 + this.filteredTrackLength()) % this.filteredTrackLength());
         break;
       case 'ArrowUp':
-        this.increaseVolume();
+        const increasedVolume = Math.min((this.volume() || 50) + 10, 100);
+        this.volume.set(increasedVolume);    
         break;
       case 'ArrowDown':
-        this.decreaseVolume();
+        const decreasedVolume = Math.max((this.volume() || 50) - 10, 0);
+        this.volume.set(decreasedVolume);
         break;
       case 'm':
         this.isMuted.set(!this.isMuted());
         break;
-      case 's':
-        this.handleSearch(event);
+      default:
         break;
     }
   }
 
   loadTrack() {
-    if (!this.audio?.paused) {
-      this.audio?.pause();
+    if (!this.nativeAudio().paused) {
+      this.nativeAudio().pause();
       this.isPlaying.set(false);
     }
 
-    this.audio = null;
     const currentTrack = this.currentTrack();
     if (currentTrack) {
-      this.audio = new Audio(currentTrack.url);
-
-      this.audio.addEventListener('timeupdate', this.updateProgress.bind(this));
-      this.audio.addEventListener('ended', this.handleNext.bind(this));
-      this.audio.addEventListener('canplay', () => this.error.set(null));
-      this.audio.addEventListener('error', () => {
-        this.error.set('Unable to load audio. Please check the audio source.');
-        this.isPlaying.set(false);
-      });
+      this.nativeAudio().src = currentTrack.url;
     }
-  }
-
-  increaseVolume() {
-    const newVolume = Math.min((this.volume() || 50) + 10, 100);
-    this.volume.set(newVolume);
-  }
-
-  decreaseVolume() {
-    const newVolume = Math.max((this.volume() || 50) - 10, 0);
-    this.volume.set(newVolume);
   }
 
   private handleNext() {
@@ -151,11 +156,11 @@ export class AppComponent {
     try {
       this.error.set(null);
       this.loadTrack();
-      await this.audio?.play();
+      await this.nativeAudio().play();
       this.isPlaying.set(true);
     } catch (e) {
-      if (!this.audio?.paused) {
-        this.audio?.pause();
+      if (!this.nativeAudio().paused) {
+        this.nativeAudio().pause();
       }
       if (e instanceof Error) {
         this.error.set((e as Error).message);
@@ -165,22 +170,9 @@ export class AppComponent {
     }
   }
 
-  private handlePrevious() {
-    this.currentTrackIndex.update((prev) => (prev - 1 + this.filteredTrackLength()) % this.filteredTrackLength());
-  }
-
-  handleSearch(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.searchQuery.set(input.value);
-  }
-
   updateProgress() {
-    if (this.audio) {
-      const duration = this.audio.duration || 1;
-      const currentTime = this.audio.currentTime;
-      this.progress.set((currentTime / duration) * 100);
-      this.currentTime.set(currentTime);
-      this.duration.set(duration);
-    }
+    const duration = this.nativeAudio().duration || 1;
+    const currentTime = this.nativeAudio().currentTime;
+    this.progress.set((currentTime / duration) * 100);
   }
 }

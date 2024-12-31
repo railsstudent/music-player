@@ -16,11 +16,13 @@
     [(isPlaying)]="isPlaying" [(isMuted)]="isMuted" [(currentTrackIndex)]="currentTrackIndex" />
 
   <!-- Current Track Duration and Custom Slider -->
-  <app-progress-bar class="mb-4 w-full max-w-md" [(progress)]="progress" [currentTime]="currentTime()" 
-    [duration]="duration()" />
+  <app-progress-bar class="mb-4 w-full max-w-md" [(progress)]="progress" [currentTime]="nativeAudio().currentTime" 
+    [duration]="nativeAudio().duration" />
 
   <!-- Volume Control -->
   <app-volume-control class="relative mb-4 w-full max-w-md" [(volume)]="volume" />
+
+  <audio #a></audio>
 
   <!-- Track List -->
   <app-track-list class="h-[200px] w-full max-w-md"
