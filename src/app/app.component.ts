@@ -7,13 +7,14 @@ import {
   ViewChild,
   ElementRef,
   ChangeDetectionStrategy,
+  viewChild,
+  DestroyRef,
+  inject,
 } from '@angular/core';
-
-interface Track {
-  title: string;
-  artist: string;
-  url: string;
-}
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { fromEvent } from 'rxjs';
+import { Track } from './interfaces/track.interface';
+import { TRACK_DATA } from './track-data';
 
 @Component({
   selector: 'app-root',
@@ -25,58 +26,7 @@ interface Track {
 export class AppComponent implements OnInit {
   @ViewChild('trackListContainer') trackListContainer!: ElementRef;
   volume = signal(100);
-  tracks: Track[] = [
-    {
-      title: 'Serenity',
-      artist: 'Piano and Strings',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-    },
-    {
-      title: 'Energetic Beats',
-      artist: 'Drum and Bass Collective',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-    },
-    {
-      title: 'Smooth Jazz',
-      artist: 'Sax and Keys',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
-    },
-    {
-      title: 'Classical Symphony',
-      artist: 'Orchestra Ensemble',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
-    },
-    {
-      title: 'Electronic Dreams',
-      artist: 'Synthwave Collective',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
-    },
-    {
-      title: 'Ambient Relaxation',
-      artist: 'Chillout Lounge',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3',
-    },
-    {
-      title: 'Country Folk',
-      artist: 'Acoustic Guitar Trio',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3',
-    },
-    {
-      title: 'Rocking Blues',
-      artist: 'Electric Guitar Band',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3',
-    },
-    {
-      title: 'Hip Hop Beats',
-      artist: 'Rap Collective',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3',
-    },
-    {
-      title: 'Reggae Vibes',
-      artist: 'Island Rhythms',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3',
-    },
-  ];
+  tracks = signal<Track[]>(TRACK_DATA);
 
   currentTrackIndex = signal(0);
   isPlaying = signal(false);
@@ -87,20 +37,44 @@ export class AppComponent implements OnInit {
   currentTime = signal(0);
   duration = signal(0);
   filteredTracks = computed(() =>
-    this.tracks.filter((track) =>
+    this.tracks().filter((track) =>
       track.title.toLowerCase().includes(this.searchQuery().toLowerCase())
     )
   );
-  private audio: HTMLAudioElement | null = null;
+  // private audio: HTMLAudioElement | null = null;
+
+  audio = viewChild.required<ElementRef<HTMLAudioElement>>('a');
+  audioNativeElement = computed(() => this.audio().nativeElement);
+
+  destroyRef$ = inject(DestroyRef);
 
   ngOnInit() {
     this.loadTrack();
     window.addEventListener('keydown', this.handleKeydown.bind(this));
+
+    fromEvent(this.audioNativeElement(), 'timeupdate')
+      .pipe(takeUntilDestroyed(this.destroyRef$))
+      .subscribe(() => this.updateProgress());
+
+    fromEvent(this.audioNativeElement(), 'ended')
+      .pipe(takeUntilDestroyed(this.destroyRef$))
+      .subscribe(() => this.handleNext());
+
+    fromEvent(this.audioNativeElement(), 'canplay')
+      .pipe(takeUntilDestroyed(this.destroyRef$))
+      .subscribe(() => this.error.set(null));
+
+    fromEvent(this.audioNativeElement(), 'error')
+      .pipe(takeUntilDestroyed(this.destroyRef$))
+      .subscribe(() => {
+        this.error.set('Unable to load audio. Please check the audio source.');
+        this.isPlaying.set(false);
+      });
   }
 
-  ngOnDestroy() {
-    window.removeEventListener('keydown', this.handleKeydown.bind(this));
-  }
+  // ngOnDestroy() {
+  //   window.removeEventListener('keydown', this.handleKeydown.bind(this));
+  // }
 
   handleKeydown(event: KeyboardEvent) {
     switch (event.key) {
@@ -130,16 +104,11 @@ export class AppComponent implements OnInit {
   }
 
   loadTrack() {
-    this.audio?.pause();
-    this.audio = new Audio(this.tracks[this.currentTrackIndex()].url);
-
-    this.audio.addEventListener('timeupdate', this.updateProgress.bind(this));
-    this.audio.addEventListener('ended', this.handleNext.bind(this));
-    this.audio.addEventListener('canplay', () => this.error.set(null));
-    this.audio.addEventListener('error', () => {
-      this.error.set('Unable to load audio. Please check the audio source.');
+    if (!this.audioNativeElement().paused) {
+      this.audioNativeElement().pause();
       this.isPlaying.set(false);
-    });
+    }
+
     if (this.volume() !== null) {
       this.setVolume(this.volume());
     }
@@ -165,22 +134,23 @@ export class AppComponent implements OnInit {
   }
 
   setVolume(value: number) {
-    if (this.audio) {
-      this.audio.volume = value / 100;
-    }
+    // if (this.audio) {
+      this.audioNativeElement().volume = value / 100;
+    // }
   }
 
   handlePlayPause() {
-    if (this.audio) {
+    // if (this.audio) {
       if (this.isPlaying()) {
-        this.audio.pause();
+        this.audioNativeElement().pause();
       } else {
-        this.audio.play().catch(() => {
+        this.audioNativeElement().play()
+        .catch(() => {
           this.error.set('Playback failed. Please try again.');
         });
       }
       this.isPlaying.set(!this.isPlaying());
-    }
+    // }
   }
 
   scrollToCurrentTrack() {
@@ -197,7 +167,7 @@ export class AppComponent implements OnInit {
     );
     this.loadTrack();
     this.isPlaying.set(true);
-    this.audio?.play();
+    this.audioNativeElement().play();
     this.scrollToCurrentTrack();
   }
 
@@ -207,7 +177,7 @@ export class AppComponent implements OnInit {
     );
     this.loadTrack();
     this.isPlaying.set(true);
-    this.audio?.play();
+    this.audioNativeElement().play();
     this.scrollToCurrentTrack();
   }
 
@@ -215,7 +185,7 @@ export class AppComponent implements OnInit {
     this.currentTrackIndex.set(index);
     this.loadTrack();
     this.isPlaying.set(true);
-    this.audio?.play();
+    this.audioNativeElement().play();
     this.scrollToCurrentTrack();
   }
 
@@ -224,10 +194,10 @@ export class AppComponent implements OnInit {
     const value = parseFloat(input.value);
     this.progress.set(value);
 
-    if (this.audio) {
-      const newTime = (value / 100) * this.audio.duration;
-      this.audio.currentTime = newTime;
-    }
+    // if (this.audio) {
+      const newTime = (value / 100) * this.audioNativeElement().duration;
+      this.audioNativeElement().currentTime = newTime;
+    // }
   }
 
   handleSearch(event: Event) {
@@ -237,19 +207,19 @@ export class AppComponent implements OnInit {
 
   toggleMute() {
     this.isMuted.set(!this.isMuted());
-    if (this.audio) {
-      this.audio.muted = this.isMuted();
-    }
+//    if (this.audio) {
+      this.audioNativeElement().muted = this.isMuted();
+//    }
   }
 
   updateProgress() {
-    if (this.audio) {
-      const duration = this.audio.duration || 1;
-      const currentTime = this.audio.currentTime;
+    // if (this.audio) {
+      const duration = this.audioNativeElement().duration || 1;
+      const currentTime = this.audioNativeElement().currentTime;
       this.progress.set((currentTime / duration) * 100);
       this.currentTime.set(currentTime);
       this.duration.set(duration);
-    }
+    // }
   }
 
   formatTime(seconds: number): string {
