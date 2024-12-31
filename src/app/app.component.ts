@@ -2,16 +2,18 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   OnInit,
   signal,
 } from '@angular/core';
 import { Track } from './music-player/interfaces/track.interface';
 import { MusicPlayerFilterBarComponent } from './music-player/music-player-filter-bar.component';
 import { TrackListComponent } from './music-player/track-list.component';
+import { ErrorComponent } from './error/error.component';
 
 @Component({
   selector: 'app-root',
-  imports: [MusicPlayerFilterBarComponent, TrackListComponent],
+  imports: [MusicPlayerFilterBarComponent, TrackListComponent, ErrorComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -85,6 +87,12 @@ export class AppComponent implements OnInit {
     )
   );
   private audio: HTMLAudioElement | null = null;
+
+  constructor() {
+    effect(() => {
+      this.playTrack();
+    });
+  }
 
   ngOnInit() {
     this.loadTrack();
