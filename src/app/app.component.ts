@@ -14,6 +14,7 @@ import { TrackInfoComponent } from './music-player/track-info.component';
 import { PlayerControlsComponent } from './music-player/player-controls.component';
 import { VolumeControlComponent } from './music-player/volume-control.component';
 import { ProgressBarComponent } from './music-player/progress-bar.component';
+import { playlist } from './app.const';
 
 @Component({
   selector: 'app-root',
@@ -25,58 +26,7 @@ import { ProgressBarComponent } from './music-player/progress-bar.component';
 })
 export class AppComponent implements OnInit {
   volume = signal(100);
-  tracks = signal<Track[]>([
-    {
-      title: 'Serenity',
-      artist: 'Piano and Strings',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-    },
-    {
-      title: 'Energetic Beats',
-      artist: 'Drum and Bass Collective',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-    },
-    {
-      title: 'Smooth Jazz',
-      artist: 'Sax and Keys',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
-    },
-    {
-      title: 'Classical Symphony',
-      artist: 'Orchestra Ensemble',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
-    },
-    {
-      title: 'Electronic Dreams',
-      artist: 'Synthwave Collective',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
-    },
-    {
-      title: 'Ambient Relaxation',
-      artist: 'Chillout Lounge',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3',
-    },
-    {
-      title: 'Country Folk',
-      artist: 'Acoustic Guitar Trio',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3',
-    },
-    {
-      title: 'Rocking Blues',
-      artist: 'Electric Guitar Band',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3',
-    },
-    {
-      title: 'Hip Hop Beats',
-      artist: 'Rap Collective',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3',
-    },
-    {
-      title: 'Reggae Vibes',
-      artist: 'Island Rhythms',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3',
-    },
-  ]);
+  tracks = signal(playlist);
 
   currentTrackIndex = signal(0);
   isPlaying = signal(false);
@@ -93,10 +43,6 @@ export class AppComponent implements OnInit {
   );
   currentTrack = computed(() => 
     this.currentTrackIndex() < 0 ? undefined : this.filteredTracks()[this.currentTrackIndex()]);
-  isChangeTrack = computed(() => {
-    const currentTrack = this.currentTrack();
-    return !!this.audio && !!currentTrack && currentTrack.url !== this.audio.src;
-  })
   filteredTrackLength = computed(() => this.filteredTracks().length);
 
   audio: HTMLAudioElement | null = null;
@@ -227,11 +173,5 @@ export class AppComponent implements OnInit {
       this.currentTime.set(currentTime);
       this.duration.set(duration);
     }
-  }
-
-  formatTime(seconds: number): string {
-    const minutes = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
   }
 }

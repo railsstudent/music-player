@@ -12,7 +12,6 @@
   <app-track-info class="w-full max-w-md" [track]="currentTrack()" />
 
   <!-- Player Controls -->
-  {{ isChangeTrack() }}, {{ currentTrack()?.url }}, {{ audio?.src }}
   <app-player-controls class="w-full max-w-md" [tracks]="filteredTracks()" 
     [(isPlaying)]="isPlaying" [(isMuted)]="isMuted" [(currentTrackIndex)]="currentTrackIndex" />
 
