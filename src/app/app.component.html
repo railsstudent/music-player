@@ -5,50 +5,46 @@
 
   <audio #a></audio>
 
-  @if(isPreloadingDone()) {
-    <app-error class="mb-4 w-full max-w-md" [error]="error()" />
+  <app-error class="mb-4 w-full max-w-md" [error]="error()" />
 
-    <!-- Search Bar -->
-    <app-track-filter class="relative mb-4 w-full max-w-md" [(searchQuery)]="searchQuery" />
+  <!-- Search Bar -->
+  <app-track-filter class="relative mb-4 w-full max-w-md" [(searchQuery)]="searchQuery" />
 
-    <!-- Current Track Info -->
-    <app-track-info class="mb-4 w-full max-w-md" [track]="currentTrack()" />
+  <!-- Current Track Info -->
+  <app-track-info class="mb-4 w-full max-w-md" [track]="currentTrack()" />
 
-    <!-- Player Controls -->
-    <div class="flex justify-center space-x-4 mb-6 w-full max-w-md">
-      <button (click)="handlePrevious()" class="btn">
-        <i class="fas fa-step-backward"></i>
-      </button>
-      <button (click)="handlePlayPause()" class="btn">
-        @if (isPlaying()) {
-        <i class="fas fa-pause"></i>
-        }
-        @else {
-        <i class="fas fa-play"></i>
-        }
-      </button>
-      <button (click)="handleNext()" class="btn">
-        <i class="fas fa-step-forward"></i>
-      </button>
-      <button (click)="toggleMute()" class="btn">
-        <i class="fas" [ngClass]="{ 'fa-volume-mute': isMuted(), 'fa-volume-up': !isMuted() }"></i>
-      </button>
-    </div>
+  <!-- Player Controls -->
+  <div class="flex justify-center space-x-4 mb-6 w-full max-w-md">
+    <button (click)="handlePrevious()" class="btn">
+      <i class="fas fa-step-backward"></i>
+    </button>
+    <button (click)="handlePlayPause()" class="btn">
+      @if (isPlaying()) {
+      <i class="fas fa-pause"></i>
+      }
+      @else {
+      <i class="fas fa-play"></i>
+      }
+    </button>
+    <button (click)="handleNext()" class="btn">
+      <i class="fas fa-step-forward"></i>
+    </button>
+    <button (click)="toggleMute()" class="btn">
+      <i class="fas" [class]="{ 'fa-volume-mute': isMuted(), 'fa-volume-up': !isMuted() }"></i>
+    </button>
+  </div>
 
-    <!-- Current Track Duration and Custom Slider -->
-    <app-track-duration class="mb-4 w-full max-w-md"
-      [trackDuration]="trackDuration()" (updateProgress)="handleSeek($event)" />
+  <!-- Current Track Duration and Custom Slider -->
+  <app-track-duration class="mb-4 w-full max-w-md"
+    [trackDuration]="trackDuration()" (updateProgress)="handleSeek($event)" />
 
-    <!-- Volume Control -->
-    <app-volume-control class="relative mb-4 w-full max-w-md" [(volume)]="volume" />
+  <!-- Volume Control -->
+  <app-volume-control class="relative mb-4 w-full max-w-md" [(volume)]="volume" />
 
-    <!-- Track List -->
-    <app-track-list class="w-full max-w-md" [tracks]="filteredTracks()"
-      [(currentTrackIndex)]="currentTrackIndex"
-    />
-  } @else {
-    <p>Preloading audio files ({{ numLoaded() }} / {{ tracks().length }})</p>
-  }
+  <!-- Track List -->
+  <app-track-list class="w-full max-w-md" [tracks]="filteredTracks()"
+    [(currentTrackIndex)]="currentTrackIndex"
+  />
   <footer class="w-full max-w-md mt-4 text-center">
     <p class="text-sm text-gray-400">Made by
       <a href="https://manthanank.github.io/" class="text-blue-400">Manthan Ankolekar</a>

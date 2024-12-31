@@ -7,7 +7,6 @@ import {
   effect,
   ElementRef,
   inject,
-  OnDestroy,
   OnInit,
   signal,
   viewChild
@@ -26,14 +25,14 @@ import { TRACK_DATA } from './track-data';
 
 @Component({
   selector: 'app-root',
-  imports: [NgClass, VolumeControlComponent, TrackInfoComponent, ErrorComponent, TrackFilterComponent,
+  imports: [VolumeControlComponent, TrackInfoComponent, ErrorComponent, TrackFilterComponent,
     TrackListComponent, TrackDurationComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppComponent implements OnInit, OnDestroy {
+export class AppComponent implements OnInit {
   volume = signal(100);
   tracks = signal<Track[]>(TRACK_DATA);
 
@@ -58,9 +57,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
   destroyRef$ = inject(DestroyRef);
 
-  isPreloadingDone = signal(false);
-  numLoaded = signal(0);
-  audios: HTMLAudioElement[] = [];
   window = inject(WINDOW_TOKEN);
 
   trackDuration = signal({
@@ -109,29 +105,6 @@ export class AppComponent implements OnInit, OnDestroy {
         this.error.set('Unable to load audio. Please check the audio source.');
         this.isPlaying.set(false);
       });
-
-    for (const track of this.tracks()) {
-      console.log('preload url', track.url);
-
-      const audio = new Audio();
-      this.audios.push(audio);
-      audio.addEventListener('canplaythrough', this.loadedAudio.bind(this), false);
-      audio.src = track.url;
-    }
-  }
-
-  loadedAudio() {
-    this.numLoaded.update((prev) => prev + 1);
-    if (this.numLoaded() === this.numTracks()) {
-      this.loadTrack();
-      this.isPreloadingDone.set(true);
-    }
-  }
-
-  ngOnDestroy() {
-    for (const audio of this.audios) {
-      audio.removeEventListener('canplaythrough', this.loadedAudio.bind(this));
-    }
   }
 
   handleKeydown(event: KeyboardEvent) {
