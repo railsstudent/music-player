@@ -6,6 +6,7 @@ import {
   computed,
   ViewChild,
   ElementRef,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 
 interface Track {
@@ -19,6 +20,7 @@ interface Track {
   imports: [NgClass],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit {
   @ViewChild('trackListContainer') trackListContainer!: ElementRef;
