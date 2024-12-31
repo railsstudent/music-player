@@ -49,20 +49,9 @@
     <app-volume-control class="relative mb-4 w-full max-w-md" [(volume)]="volume" />
 
     <!-- Track List -->
-    <h3 class="text-xl font-semibold mb-2">Track List</h3>
-    <div class="h-[200px] w-full max-w-md rounded-md border border-gray-700 p-4 overflow-y-auto custom-scrollbar"
-      #trackListContainer>
-      @for (track of filteredTracks(); track $index) {
-      <div class="p-2 cursor-pointer hover:bg-gray-700 rounded-md"
-        [ngClass]="{ 'bg-gray-700': $index === currentTrackIndex() }" (click)="handleTrackSelect($index)">
-        <p class="font-medium">{{ track.title }}</p>
-        <p class="text-sm text-gray-400">{{ track.artist }}</p>
-      </div>
-      }
-      @empty {
-      <p class="text-gray-400">No tracks found</p>
-      }
-    </div>
+    <app-track-list class="w-full max-w-md" [tracks]="filteredTracks()"
+      [(currentTrackIndex)]="currentTrackIndex"
+    />
   } @else {
     <p>Preloading audio files ({{ numLoaded() }} / {{ tracks().length }})</p>
   }

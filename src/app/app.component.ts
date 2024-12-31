@@ -22,16 +22,18 @@ import { VolumeControlComponent } from './music-player/volume-control/volume-con
 import { TrackInfoComponent } from './music-player/track-info/track-info.component';
 import { ErrorComponent } from './error/error.component';
 import { TrackFilterComponent } from './music-player/track-filter/track-filter.component';
+import { TrackListComponent } from './music-player/track-list/track-list.component';
 
 @Component({
   selector: 'app-root',
-  imports: [NgClass, VolumeControlComponent, TrackInfoComponent, ErrorComponent, TrackFilterComponent],
+  imports: [NgClass, VolumeControlComponent, TrackInfoComponent, ErrorComponent, TrackFilterComponent,
+    TrackListComponent
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit, OnDestroy {
-  @ViewChild('trackListContainer') trackListContainer!: ElementRef;
   volume = signal(100);
   tracks = signal<Track[]>(TRACK_DATA);
 
@@ -78,6 +80,10 @@ export class AppComponent implements OnInit, OnDestroy {
     effect(() => {
       this.audioNativeElement().volume = this.volume() / 100;
       this.audioNativeElement().muted = this.isMuted();
+
+      this.loadTrack();
+      this.isPlaying.set(true);
+      this.audioNativeElement().play();
     });
   }
 
@@ -190,36 +196,12 @@ export class AppComponent implements OnInit, OnDestroy {
     this.isPlaying.set(!this.isPlaying());
   }
 
-  scrollToCurrentTrack() {
-    const container = this.trackListContainer.nativeElement;
-    const selectedTrack = container.children[this.currentTrackIndex()];
-    if (selectedTrack) {
-      selectedTrack.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-  }
-
   handleNext() {
     this.currentTrackIndex.update((prev) => (prev + 1) % this.numTracks());
-    this.loadTrack();
-    this.isPlaying.set(true);
-    this.audioNativeElement().play();
-    this.scrollToCurrentTrack();
   }
 
   handlePrevious() {
     this.currentTrackIndex.update((prev) => (prev - 1 + this.numTracks()) % this.numTracks());
-    this.loadTrack();
-    this.isPlaying.set(true);
-    this.audioNativeElement().play();
-    this.scrollToCurrentTrack();
-  }
-
-  handleTrackSelect(index: number) {
-    this.currentTrackIndex.set(index);
-    this.loadTrack();
-    this.isPlaying.set(true);
-    this.audioNativeElement().play();
-    this.scrollToCurrentTrack();
   }
 
   handleSeek(event: Event) {
