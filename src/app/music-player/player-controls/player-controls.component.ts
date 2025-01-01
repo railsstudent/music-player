@@ -13,8 +13,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 export class PlayerControlsComponent {
   isMuted = model.required<boolean>();
   currentTrackIndex = model.required<number>();
-  canPlay = model.required<boolean>();
-
+  hasUserAction = model.required<boolean>();
+  isPlaying = model.required<boolean>();
   numTracks = input.required<number>();
 
   window = inject(WINDOW_TOKEN);
@@ -25,33 +25,46 @@ export class PlayerControlsComponent {
         .pipe(
           filter((e) => e instanceof KeyboardEvent),
           map((e) => e as KeyboardEvent),
-          filter((e) => ['m', 'ArrowRight', 'ArrowLeft'].includes(e.key)),
+          filter((e) => ['m', 'ArrowRight', 'ArrowLeft', ' '].includes(e.key)),
           takeUntilDestroyed()
         )
-        .subscribe((e) => {
-          switch (e.key) {
-            case 'm':
-              this.toggleMute();
-              break;
-            case 'ArrowRight':
-              this.handleNext();
-              break;
-            case 'ArrowLeft':
-              this.handlePrevious();
-              break;  
-          }
-        });
+        .subscribe((e) => this.adjustTrackPlayed(e));
     }
+  }
+
+  adjustTrackPlayed (e: KeyboardEvent) {
+    switch (e.key) {
+      case ' ':
+        e.preventDefault();
+        this.handlePlayPause();
+        break;
+      case 'm':
+        this.toggleMute();
+        break;
+      case 'ArrowRight':
+        this.handleNext();
+        break;
+      case 'ArrowLeft':
+        this.handlePrevious();
+        break;  
+    }
+  }
+
+  handlePlayPause() {
+    this.isPlaying.set(!this.isPlaying());
+    this.hasUserAction.set(true);
   }
 
   handleNext() {
     this.currentTrackIndex.update((prev) => (prev + 1) % this.numTracks());
-    this.canPlay.set(true);
+    this.hasUserAction.set(true);
+    this.isPlaying.set(true);
   }
 
   handlePrevious() {
     this.currentTrackIndex.update((prev) => (prev - 1 + this.numTracks()) % this.numTracks());
-    this.canPlay.set(true);
+    this.hasUserAction.set(true);
+    this.isPlaying.set(true);
   }
 
   toggleMute() {

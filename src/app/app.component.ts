@@ -11,9 +11,8 @@ import {
   viewChild
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { filter, fromEvent, map } from 'rxjs';
+import { fromEvent } from 'rxjs';
 import { ErrorComponent } from './error/error.component';
-import { WINDOW_TOKEN } from './injection-tokens/window.token';
 import { Track } from './interfaces/track.interface';
 import { PlayerControlsComponent } from './music-player/player-controls/player-controls.component';
 import { TrackDurationComponent } from './music-player/track-duration/track-duration.component';
@@ -57,35 +56,33 @@ export class AppComponent implements OnInit {
 
   destroyRef$ = inject(DestroyRef);
 
-  window = inject(WINDOW_TOKEN);
-
   trackDuration = signal({
     duration: 0,
     currentTime: 0,
     progress: 0,
   });
 
-  canPlay = signal(false);
+  hasUserAction = signal(false);
 
   constructor() {
-    if (this.window) {
-      fromEvent(this.window, 'keydown')
-        .pipe(
-          filter((e) => e instanceof KeyboardEvent),
-          map((e) => e as KeyboardEvent),
-          takeUntilDestroyed()
-        )
-        .subscribe((e) => this.handleKeydown(e));
-    }
-
     effect(() => {
       this.audioNativeElement().volume = this.volume() / 100;
       this.audioNativeElement().muted = this.isMuted();
 
-      if (this.canPlay()) {
-        this.loadTrack();
-        this.isPlaying.set(true);
-        this.audioNativeElement().play();
+      if (this.hasUserAction() && !this.isPlaying()) {
+        this.audioNativeElement().pause();
+      }
+
+      if (this.hasUserAction() && this.isPlaying()) {
+        if (this.currentTrack()?.url !== this.audioNativeElement().src) {
+          this.loadTrack();
+          this.audioNativeElement().play();
+        } else {
+          this.audioNativeElement().play()
+            .catch(() => {
+              this.error.set('Playback failed. Please try again.');
+            });
+        }
       }
     });
   }
@@ -111,20 +108,10 @@ export class AppComponent implements OnInit {
       });
   }
 
-  handleKeydown(event: KeyboardEvent) {
-    switch (event.key) {
-      case ' ':
-        event.preventDefault();
-        this.handlePlayPause();
-        break;
-    }
-  }
-
   loadTrack() {
     try {
       if (!this.audioNativeElement().paused) {
         this.audioNativeElement().pause();
-        this.isPlaying.set(false);
       }
 
       const track = this.currentTrack();
@@ -139,27 +126,9 @@ export class AppComponent implements OnInit {
     }
   }
 
-  handlePlayPause() {
-    if (this.isPlaying()) {
-      this.audioNativeElement().pause();
-    } else {
-      this.audioNativeElement().play()
-      .catch(() => {
-        this.error.set('Playback failed. Please try again.');
-      });
-    }
-    this.isPlaying.set(!this.isPlaying());
-    this.canPlay.set(true);
-  }
-
   handleNext() {
     this.currentTrackIndex.update((prev) => (prev + 1) % this.numTracks());
-    this.canPlay.set(true);
-  }
-
-  handlePrevious() {
-    this.currentTrackIndex.update((prev) => (prev - 1 + this.numTracks()) % this.numTracks());
-    this.canPlay.set(true);
+    this.hasUserAction.set(true);
   }
 
   handleSeek(value: number) {
@@ -167,15 +136,6 @@ export class AppComponent implements OnInit {
 
     const newTime = (value / 100) * this.audioNativeElement().duration;
     this.audioNativeElement().currentTime = newTime;
-  }
-
-  handleSearch(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.searchQuery.set(input.value);
-  }
-
-  toggleMute() {
-    this.isMuted.set(!this.isMuted());
   }
 
   updateProgress() {

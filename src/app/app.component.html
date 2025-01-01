@@ -14,28 +14,9 @@
   <app-track-info class="mb-4 w-full max-w-md" [track]="currentTrack()" />
 
   <!-- Player Controls -->
-  <div class="flex justify-center space-x-4 mb-6 w-full max-w-md">
-    <button (click)="handlePrevious()" class="btn">
-      <i class="fas fa-step-backward"></i>
-    </button>
-    <button (click)="handlePlayPause()" class="btn">
-      @if (isPlaying()) {
-      <i class="fas fa-pause"></i>
-      }
-      @else {
-      <i class="fas fa-play"></i>
-      }
-    </button>
-    <button (click)="handleNext()" class="btn">
-      <i class="fas fa-step-forward"></i>
-    </button>
-    <button (click)="toggleMute()" class="btn">
-      <i class="fas" [class]="{ 'fa-volume-mute': isMuted(), 'fa-volume-up': !isMuted() }"></i>
-    </button>
-  </div>
   <app-player-controls class="mb-6 w-full max-w-md" [(isMuted)]="isMuted" 
-    [(canPlay)]="canPlay" [(currentTrackIndex)]="currentTrackIndex"
-    [numTracks]="numTracks()"
+    [(hasUserAction)]="hasUserAction" [(currentTrackIndex)]="currentTrackIndex"
+    [numTracks]="numTracks()" [(isPlaying)]="isPlaying"
   />
 
   <!-- Current Track Duration and Custom Slider -->
