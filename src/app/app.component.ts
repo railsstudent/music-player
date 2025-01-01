@@ -38,11 +38,9 @@ export class AppComponent implements OnInit {
   error = signal<string | null>(null);
   searchQuery = signal('');
   isMuted = signal(false);
-  filteredTracks = computed(() =>
-    this.tracks().filter((track) =>
-      track.title.toLowerCase().includes(this.searchQuery().toLowerCase())
-    )
-  );
+  filteredTracks = computed(() => this.tracks().filter(
+    (track) => track.title.toLowerCase().includes(this.searchQuery().toLowerCase())
+  ));
   numTracks = computed(() => this.filteredTracks().length);
   currentTrack = computed(() => {
     const index = this.currentTrackIndex();
@@ -85,25 +83,18 @@ export class AppComponent implements OnInit {
     });
   }
 
+  private registerAudioEvent(eventName: string) {
+    return fromEvent(this.audioNativeElement(), eventName).pipe(takeUntilDestroyed(this.destroyRef$));
+  }
+
   ngOnInit() {
-    fromEvent(this.audioNativeElement(), 'timeupdate')
-      .pipe(takeUntilDestroyed(this.destroyRef$))
-      .subscribe(() => this.updateProgress());
-
-    fromEvent(this.audioNativeElement(), 'ended')
-      .pipe(takeUntilDestroyed(this.destroyRef$))
-      .subscribe(() => this.handleNext());
-
-    fromEvent(this.audioNativeElement(), 'canplay')
-      .pipe(takeUntilDestroyed(this.destroyRef$))
-      .subscribe(() => this.error.set(null));
-
-    fromEvent(this.audioNativeElement(), 'error')
-      .pipe(takeUntilDestroyed(this.destroyRef$))
-      .subscribe(() => {
-        this.error.set('Unable to load audio. Please check the audio source.');
-        this.isPlaying.set(false);
-      });
+    this.registerAudioEvent('timeupdate').subscribe(() => this.updateProgress());
+    this.registerAudioEvent('ended').subscribe(() => this.handleNext());
+    this.registerAudioEvent('canplay').subscribe(() => this.error.set(null));
+    this.registerAudioEvent('error').subscribe(() => {
+      this.error.set('Unable to load audio. Please check the audio source.');
+      this.isPlaying.set(false);
+    });
   }
 
   loadTrack() {
