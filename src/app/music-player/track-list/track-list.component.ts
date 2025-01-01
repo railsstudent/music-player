@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, input, model, viewChild } from '@angular/core';
-import { Track } from '../../interfaces/track.interface';
+import { Track } from '../interfaces/track.interface';
 
 @Component({
   selector: 'app-track-list',

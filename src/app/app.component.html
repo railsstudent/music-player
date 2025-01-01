@@ -13,18 +13,12 @@
   <!-- Current Track Info -->
   <app-track-info class="mb-4 w-full max-w-md" [track]="currentTrack()" />
 
-  <!-- Player Controls -->
-  <app-player-controls class="mb-6 w-full max-w-md" [(isMuted)]="isMuted" 
-    [(hasUserAction)]="hasUserAction" [(currentTrackIndex)]="currentTrackIndex"
-    [numTracks]="numTracks()" [(isPlaying)]="isPlaying"
+  <!-- Track Control Bars -->
+  <app-track-control-bars  class="relative mb-4 w-full max-w-md" 
+    [trackDuration]="trackDuration()" (updateProgress)="handleSeek($event)" [(volume)]="volume" 
+    [(isMuted)]="isMuted" [(hasUserAction)]="hasUserAction" [(currentTrackIndex)]="currentTrackIndex"
+    [numTracks]="numTracks()" [(isPlaying)]="isPlaying"  
   />
-
-  <!-- Current Track Duration and Custom Slider -->
-  <app-track-duration class="mb-4 w-full max-w-md"
-    [trackDuration]="trackDuration()" (updateProgress)="handleSeek($event)" />
-
-  <!-- Volume Control -->
-  <app-volume-control class="relative mb-4 w-full max-w-md" [(volume)]="volume" />
 
   <!-- Track List -->
   <app-track-list class="w-full max-w-md" [tracks]="filteredTracks()"

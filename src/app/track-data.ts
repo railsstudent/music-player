@@ -1,4 +1,4 @@
-import { Track } from './interfaces/track.interface';
+import { Track } from './music-player/interfaces/track.interface';
 
 // export const TRACK_DATA: Track[] = [
 //     {

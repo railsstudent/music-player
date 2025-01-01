@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TrackDuration } from '../interfaces/track.interface';
 
 function formatTime(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
@@ -15,7 +16,7 @@ function formatTime(seconds: number): string {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TrackDurationComponent {
-  trackDuration = input.required<{ duration: number, currentTime: number, progress: number }>();
+  trackDuration = input.required<TrackDuration>();
 
   currentTime = computed(() => this.trackDuration().currentTime);
   duration = computed(() => this.trackDuration().duration);

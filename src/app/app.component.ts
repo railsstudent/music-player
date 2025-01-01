@@ -13,19 +13,17 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { fromEvent } from 'rxjs';
 import { ErrorComponent } from './error/error.component';
-import { Track } from './interfaces/track.interface';
-import { PlayerControlsComponent } from './music-player/player-controls/player-controls.component';
-import { TrackDurationComponent } from './music-player/track-duration/track-duration.component';
+import { Track, TrackDuration } from './music-player/interfaces/track.interface';
+import { TrackControlBarsComponent } from './music-player/track-control-bars/track-control-bars.component';
 import { TrackFilterComponent } from './music-player/track-filter/track-filter.component';
 import { TrackInfoComponent } from './music-player/track-info/track-info.component';
 import { TrackListComponent } from './music-player/track-list/track-list.component';
-import { VolumeControlComponent } from './music-player/volume-control/volume-control.component';
 import { TRACK_DATA } from './track-data';
 
 @Component({
   selector: 'app-root',
-  imports: [VolumeControlComponent, TrackInfoComponent, ErrorComponent, TrackFilterComponent,
-    TrackListComponent, TrackDurationComponent, PlayerControlsComponent
+  imports: [TrackInfoComponent, ErrorComponent, TrackFilterComponent,
+    TrackListComponent, TrackControlBarsComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
@@ -56,7 +54,7 @@ export class AppComponent implements OnInit {
 
   destroyRef$ = inject(DestroyRef);
 
-  trackDuration = signal({
+  trackDuration = signal<TrackDuration>({
     duration: 0,
     currentTime: 0,
     progress: 0,

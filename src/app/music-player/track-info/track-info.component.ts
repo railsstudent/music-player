@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { Track } from '../../interfaces/track.interface';
+import { Track } from '../interfaces/track.interface';
 
 @Component({
   selector: 'app-track-info',
