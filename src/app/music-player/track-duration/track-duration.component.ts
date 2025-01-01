@@ -11,7 +11,15 @@ function formatTime(seconds: number): string {
 @Component({
   selector: 'app-track-duration',
   imports: [FormsModule],
-  templateUrl: './track-duration.component.html',
+  template: `<div class="flex items-center justify-between">
+    <span class="text-sm text-gray-400">{{ displayCurrentTime() }}</span>
+    <div class="relative flex-1 mx-2">
+      <input type="range" min="0" max="100" [ngModel]="trackDuration().progress" 
+        (ngModelChange)="updateProgress.emit($event)"
+        class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider-thumb" />
+    </div>
+    <span class="text-sm text-gray-400">{{ displayDuration() }}</span>
+  </div>`,
   styleUrl: '../volume-control/volume-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

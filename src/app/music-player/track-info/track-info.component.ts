@@ -3,7 +3,6 @@ import { Track } from '../interfaces/track.interface';
 
 @Component({
   selector: 'app-track-info',
-  imports: [],
   template: `
     <div class="text-center">
       @let t = track();

@@ -7,7 +7,21 @@ import { TrackDuration } from '../interfaces/track.interface';
 @Component({
   selector: 'app-track-control-bars',
   imports: [TrackDurationComponent, PlayerControlsComponent, VolumeControlComponent],
-  templateUrl: './track-control-bars.component.html',
+  template: `
+    <div class="flex flex-col">
+      <!-- Player Controls -->
+      <app-player-controls class="mb-6 w-full max-w-md" [(isMuted)]="isMuted" 
+          [(hasUserAction)]="hasUserAction" [(currentTrackIndex)]="currentTrackIndex"
+          [numTracks]="numTracks()" [(isPlaying)]="isPlaying"
+      />
+
+      <!-- Current Track Duration and Custom Slider -->
+      <app-track-duration class="relative mb-4 w-full max-w-md" 
+          [trackDuration]="trackDuration()" (updateProgress)="updateProgress.emit($event)" />
+
+      <!-- Volume Control -->
+      <app-volume-control class="relative mb-4 w-full max-w-md" [(volume)]="volume" />
+    </div>`,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TrackControlBarsComponent {

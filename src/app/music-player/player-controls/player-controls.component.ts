@@ -5,8 +5,21 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-player-controls',
-  imports: [],
-  templateUrl: './player-controls.component.html',
+  template: `
+    <div class="flex justify-center space-x-4">
+      <button (click)="handlePrevious()" class="btn">
+        <i class="fas fa-step-backward"></i>
+      </button>
+      <button (click)="handlePlayPause()" class="btn">
+        <i class="fas" [class]="{ 'fa-pause': isPlaying(), 'fa-play': !isPlaying() }"></i>
+      </button>
+      <button (click)="handleNext()" class="btn">
+        <i class="fas fa-step-forward"></i>
+      </button>
+      <button (click)="toggleMute()" class="btn">
+        <i class="fas" [class]="{ 'fa-volume-mute': isMuted(), 'fa-volume-up': !isMuted() }"></i>
+      </button>
+    </div>`,
   styleUrl: './player-controls.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
